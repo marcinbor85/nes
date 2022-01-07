@@ -4,25 +4,28 @@ import (
 	"os"
 	"os/user"
 	"fmt"
+	"bytes"
 
 	"github.com/akamensky/argparse"
 	
 	"github.com/marcinbor85/nes/crypto"
 	"github.com/marcinbor85/nes/config"
+
+	"github.com/marcinbor85/pubkey/api"
 )
 
 type Settings struct {
-	MqttBroker string
-	KeyProvider string
-	PrivateKey string
-	Nickname string
+	MqttBrokerAddress string
+	PubKeyAddress string
+	PrivateKeyFile string
+	Username string
 }
 
 var settings = &Settings{}
 
 const (
 	MQTT_BROKER_ADDRESS_DEFAULT = "test.mosquitto.org"
-	PUBKEY_ADDRESS_DEFAULT = "microshell.pl/pubkey"
+	PUBKEY_ADDRESS_DEFAULT = "https://microshell.pl/pubkey"
 	PRIVATE_KEY_FILE_DEFAULT = "~/.ssh/id_rsa"
 	CONFIG_FILE_DEFAULT = ".env"
 )
@@ -48,23 +51,33 @@ func main() {
 		Default: nil,
 	})
 
-	nickArg := parser.String("n", "nick", &argparse.Options{
+	usernameArg := parser.String("u", "user", &argparse.Options{
 		Required: false,
-		Help: "Local nickname. Default: <os_user>",
+		Help: "Local username. Default: <os_user>",
 		Default: nil,
 	})
 
 	configArg := parser.String("c", "config", &argparse.Options{
 		Required: false,
-		Help: `Optional config file. Supported fields: MQTT_BROKER_ADDRESS, PUBKEY_ADDRESS, PRIVATE_KEY_FILE, NICKNAME`,
+		Help: `Optional config file. Supported fields: MQTT_BROKER_ADDRESS, PUBKEY_ADDRESS, PRIVATE_KEY_FILE, USERNAME`,
 		Default: CONFIG_FILE_DEFAULT,
+	})
+
+	registerCmd := parser.NewCommand("register", "register username")
+	publicArg := registerCmd.String("P", "public", &argparse.Options{
+		Required: true,
+		Help: `Public key file.`,
+	})
+	emailArg := registerCmd.String("e", "email", &argparse.Options{
+		Required: true,
+		Help: `User email (need to activate username).`,
 	})
 
 	listenCmd := parser.NewCommand("listen", "listen to messages")
 
 	sendCmd := parser.NewCommand("send", "send message to recipient")
-	_ = sendCmd.String("t", "to", &argparse.Options{Required: true, Help: "Recipient nickname"})
-	sendCmd.Flag("i", "interactive", &argparse.Options{Help: "Enable interactive mode"})
+	toArg := sendCmd.String("t", "to", &argparse.Options{Required: true, Help: "Recipient username"})
+	_ = sendCmd.Flag("i", "interactive", &argparse.Options{Help: "Enable interactive mode"})
 
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -74,24 +87,53 @@ func main() {
 
 	config.Init(*configArg)
 	
-	settings.MqttBroker = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
-	settings.KeyProvider = config.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
-	settings.PrivateKey = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", PRIVATE_KEY_FILE_DEFAULT)
+	settings.MqttBrokerAddress = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
+	settings.PubKeyAddress = config.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
+	settings.PrivateKeyFile = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", PRIVATE_KEY_FILE_DEFAULT)
 
 	osUser, err := user.Current()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	settings.Nickname = config.Alternate(*nickArg, "NICKNAME", osUser.Username)
+	settings.Username = config.Alternate(*usernameArg, "USERNAME", osUser.Username)
 
 	crypto.Init()
 
-	fmt.Println(settings)
+	client := &api.Client{
+		Address: settings.PubKeyAddress,
+	}
 
-	if listenCmd.Happened() {
+	if registerCmd.Happened() {
+
+		f, e := os.Open(*publicArg)
+		if e != nil {
+			fmt.Println("cannot open public key file")
+			return
+		}
+		defer f.Close()
+		
+		bytesBuf := &bytes.Buffer{}
+		bytesBuf.ReadFrom(f)
+		publicKeyPem := bytesBuf.String()
+
+		err := client.RegisterNewUsername(settings.Username, *emailArg, publicKeyPem)
+		if err != nil {
+			fmt.Printf(err.E.Error())
+			return
+		}
+		fmt.Println("username registered. check email for activation.")
+		
+	} else if listenCmd.Happened() {
 
 	} else if sendCmd.Happened() {
+		key, err := client.GetPublicKeyByUsername(*toArg)
+		if err != nil {
+			fmt.Println("unknown recipient username")
+			return
+		}
+
+		fmt.Println(key)
 
 	} else {
 		panic("really?")
