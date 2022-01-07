@@ -13,7 +13,7 @@ func Alternate(priorityVal string, key string, defaultVal string) string {
 	configVal := Get(key)
 	if configVal != "" {
 		return configVal
-	}	
+	}
 	return defaultVal
 }
 
