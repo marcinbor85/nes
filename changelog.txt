@@ -1,2 +1,6 @@
 TODO:
 - build-in generate keys command
+- chat command
+- find private key by pattern <username>-rsa (current dir, and user home)
+- message by cli argument
+- verbose mode (show json frames and messages)
