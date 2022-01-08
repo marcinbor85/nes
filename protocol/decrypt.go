@@ -8,24 +8,38 @@ import (
 	"crypto/rsa"
 
 	"github.com/marcinbor85/pubkey/api"
+
+	"github.com/marcinbor85/nes/crypto/aes"
 )
 
 func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Message, error) {
 	
+	// get randomKeyEncryptedEncoded from frame
+	randomKeyEncryptedEncoded := frame.Cipherkey
+	
+	// decode messageEncryptedEncoded from base64 
+	randomKeyEncrypted, err := base64.URLEncoding.DecodeString(randomKeyEncryptedEncoded)
+	if err != nil {
+		return nil, err
+	}
+
+	// decrypt messageEncrypted using privateKey
+	randomKey, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, randomKeyEncrypted)
+	if err != nil {
+		return nil, err
+	}
+
 	// get messageEncryptedEncoded from frame
 	messageEncryptedEncoded := frame.Ciphertext
-	
+
 	// decode messageEncryptedEncoded from base64 
 	messageEncrypted, err := base64.URLEncoding.DecodeString(messageEncryptedEncoded)
 	if err != nil {
 		return nil, err
 	}
 
-	// decrypt messageEncrypted using privateKey
-	messageBin, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, messageEncrypted)
-	if err != nil {
-		return nil, err
-	}
+	// decrypt message
+	messageBin := aes.Decrypt(messageEncrypted, randomKey[:32], randomKey[32:])
 
 	messageString := string(messageBin)
 
@@ -40,17 +54,17 @@ func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Me
 	}
 
 	// calculate hash of messageBin
-	hash32 := sha256.Sum256(messageBin)
-	hash := hash32[:]
+	messageHash32 := sha256.Sum256(messageBin)
+	messageHash := messageHash32[:]
 
 	// get signatureEncoded from frame
-	signatureEncoded := frame.Signature
+	messageSignatureEncoded := frame.Signature
 	
 	// decode signatureEncoded from base64 
-	signature, err := base64.URLEncoding.DecodeString(signatureEncoded)
+	messageSignature, err := base64.URLEncoding.DecodeString(messageSignatureEncoded)
 
 	// verify signature using privateKey
-	err = rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, hash, signature)
+	err = rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, messageHash, messageSignature)
 	if err != nil {
 		return nil, err
 	}

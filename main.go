@@ -160,7 +160,7 @@ func main() {
 			From: settings.Username,
 			To: recipient,
 			Timestamp: time.Now().UnixMilli(),
-			Message: "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
+			Message: "test",
 		}
 
 		fmt.Println(msg)

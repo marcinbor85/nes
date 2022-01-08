@@ -5,6 +5,7 @@ import (
 )
 
 type Frame struct {
+	Cipherkey   string `json:"cipherkey"`
 	Ciphertext	string `json:"ciphertext"`
 	Signature	string `json:"signature"`
 }

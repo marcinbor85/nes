@@ -6,41 +6,54 @@ import (
 	"crypto/sha256"
 	"crypto/rand"
 	"crypto/rsa"
+
+	"github.com/marcinbor85/nes/crypto/aes"
 )
 
 func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (*Frame, error) {
 	// stringinize message struct
 	messageString := message.String()
 
-	// convert to binary data
+	// binarize messageString
 	messageBin := []byte(messageString)
 
-	// encrypt message using publicKey
-	messageEncrypted, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, messageBin)
-	if err != nil {
-		return nil, err
-	}
+	// generate random key and vector
+	randomKey := make([]byte, 48)
+	rand.Read(randomKey)
+
+	// encrypt message with randomKey
+	messageEncrypted := aes.Encrypt(messageBin, randomKey[:32], randomKey[32:])
 
 	// encode messageEncrypted to base64
 	messageEncryptedEncoded := base64.URLEncoding.EncodeToString(messageEncrypted)
 
+	// encrypt randomKey using publicKey
+	randomKeyEncrypted, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, randomKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// encode randomKeyEncrypted to base64
+	randomKeyEncryptedEncoded := base64.URLEncoding.EncodeToString(randomKeyEncrypted)
+
 	// calculate hash of messageBin
-	hash32 := sha256.Sum256(messageBin)
-	hash := hash32[:]
+	messageHash32 := sha256.Sum256(messageBin)
+	messageHash := messageHash32[:]
 
 	// sign messageBin hash using privateKey
-	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hash)
+	messageSignature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, messageHash)
 	if err != nil {
 		return nil, err
 	}
 
 	// encode signature to base64
-	signatureEncoded := base64.URLEncoding.EncodeToString(signature)
+	messageSignatureEncoded := base64.URLEncoding.EncodeToString(messageSignature)
 	
 	// create transport frame
 	frame := &Frame{
+		Cipherkey: randomKeyEncryptedEncoded,
 		Ciphertext: messageEncryptedEncoded,
-		Signature: signatureEncoded,
+		Signature: messageSignatureEncoded,
 	}
 
 	return frame, nil
