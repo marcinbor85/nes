@@ -1,6 +1,8 @@
 package crypto
 
 import (
+	"os"
+	"bytes"
 	"errors"
 
 	"encoding/base64"
@@ -66,4 +68,23 @@ func EncodeTextMessage(msg string, pemPublicKey string) (string, error) {
 
 	ciphertext := base64.StdEncoding.EncodeToString(output)
 	return ciphertext, nil
+}
+
+func LoadPrivateKey(filename string) (*rsa.PrivateKey, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	bytesBuf := &bytes.Buffer{}
+	bytesBuf.ReadFrom(file)
+	privateKeyPem := bytesBuf.String()
+
+	privateKey, err := DecodePrivateKey(privateKeyPem)
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKey, nil
 }
