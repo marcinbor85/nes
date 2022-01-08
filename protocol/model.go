@@ -17,27 +17,36 @@ type Message struct {
 	Message		string `json:"message"`
 }
 
-func (msg *Message) String() string {
-	msgJson, err := json.Marshal(msg)
+func (message *Message) String() string {
+	text, err := json.Marshal(message)
 	if err != nil {
 		return ""
 	}
-	return string(msgJson)
+	return string(text)
 }
 
-func MessageFromString(str string) (*Message, error) {
-	msg := &Message{}
-	err := json.Unmarshal([]byte(str), &msg)
+func MessageFromString(text string) (*Message, error) {
+	message := &Message{}
+	err := json.Unmarshal([]byte(text), &message)
 	if err != nil {
 		return nil, err
 	}
-	return msg, nil
+	return message, nil
 }
 
-func (frm *Frame) String() string {
-	frmJson, err := json.Marshal(frm)
+func (frame *Frame) String() string {
+	text, err := json.Marshal(frame)
 	if err != nil {
 		return ""
 	}
-	return string(frmJson)
+	return string(text)
+}
+
+func FrameFromString(text string) (*Frame, error) {
+	frame := &Frame{}
+	err := json.Unmarshal([]byte(text), &frame)
+	if err != nil {
+		return nil, err
+	}
+	return frame, nil
 }
