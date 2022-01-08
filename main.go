@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"bufio"
 	"os/user"
 
 	"github.com/akamensky/argparse"
@@ -12,6 +13,7 @@ import (
 	"github.com/marcinbor85/nes/config"
 	"github.com/marcinbor85/nes/crypto"
 	"github.com/marcinbor85/nes/protocol"
+	"github.com/marcinbor85/nes/broker"
 
 	"github.com/marcinbor85/pubkey/api"
 )
@@ -26,7 +28,7 @@ type Settings struct {
 var settings = &Settings{}
 
 const (
-	MQTT_BROKER_ADDRESS_DEFAULT = "test.mosquitto.org"
+	MQTT_BROKER_ADDRESS_DEFAULT = "tcp://test.mosquitto.org:1883"
 	PUBKEY_ADDRESS_DEFAULT      = "https://microshell.pl/pubkey"
 	PRIVATE_KEY_FILE_DEFAULT    = "~/.ssh/id_rsa"
 	CONFIG_FILE_DEFAULT         = ".env"
@@ -102,7 +104,7 @@ func main() {
 
 	crypto.Init()
 
-	client := &api.Client{
+	pubkeyClient := &api.Client{
 		Address: settings.PubKeyAddress,
 	}
 
@@ -119,7 +121,7 @@ func main() {
 		bytesBuf.ReadFrom(f)
 		publicKeyPem := bytesBuf.String()
 
-		err := client.RegisterNewUsername(settings.Username, *emailArg, publicKeyPem)
+		err := pubkeyClient.RegisterNewUsername(settings.Username, *emailArg, publicKeyPem)
 		if err != nil {
 			fmt.Printf(err.E.Error())
 			return
@@ -127,40 +129,70 @@ func main() {
 		fmt.Println("username registered. check email for activation.")
 
 	} else if listenCmd.Happened() {
+		// TODO: check if local user exist
+
+		privateKey, err := crypto.LoadPrivateKey(settings.PrivateKeyFile)
+		if err != nil {
+			fmt.Println("cannot load private key:", err.Error())
+			return
+		}
+
+		brokerClient := &broker.Client{
+			BrokerAddress: settings.MqttBrokerAddress,
+			OnFrame: func(client *broker.Client, frame *protocol.Frame) {
+				msg, e := frame.Decrypt(privateKey, pubkeyClient)
+				if e != nil {
+					fmt.Println("cannot decrypt:", e.Error())
+					return
+				}
+				t := time.UnixMilli(msg.Timestamp)
+				tm := t.Format("2006-01-02 15:04:05")
+				fmt.Printf("[%s] %s > %s\n", tm, msg.From, msg.Message)
+			},
+		}
+
+		er := brokerClient.Connect()
+		if er != nil {
+			fmt.Println("cannot connect to broker:", er.Error())
+			return
+		}
+		defer brokerClient.Disconnect()
+
+		er = brokerClient.Recv(settings.Username)
+		if er != nil {
+			fmt.Println("cannot subscribe:", er.Error())
+			return
+		}
+
+		fmt.Println("Press the Enter Key to exit.")
+    	fmt.Scanln()
 
 	} else if sendCmd.Happened() {
 		recipient := *toArg
 
 		// TODO: check if local user exist
 
-		f, e := os.Open(settings.PrivateKeyFile)
-		if e != nil {
-			fmt.Println("cannot open private key file")
-			return
-		}
-		defer f.Close()
-
-		bytesBuf := &bytes.Buffer{}
-		bytesBuf.ReadFrom(f)
-		privateKeyPem := bytesBuf.String()
-
-		privateKey, err := crypto.DecodePrivateKey(privateKeyPem)
-		if err != nil {
-			fmt.Println("cannot decode private key")
-			return
-		}
-
-		publicKey, ee := client.GetPublicKeyByUsername(recipient)
-		if ee != nil {
+		publicKey, apiErr := pubkeyClient.GetPublicKeyByUsername(recipient)
+		if apiErr != nil {
 			fmt.Println("unknown recipient username")
 			return
 		}
+
+		privateKey, err := crypto.LoadPrivateKey(settings.PrivateKeyFile)
+		if err != nil {
+			fmt.Println("cannot load private key:", err.Error())
+			return
+		}
+
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		message := scanner.Text()
 
 		msg := &protocol.Message{
 			From: settings.Username,
 			To: recipient,
 			Timestamp: time.Now().UnixMilli(),
-			Message: "test",
+			Message: message,
 		}
 
 		fmt.Println(msg)
@@ -170,14 +202,21 @@ func main() {
 			fmt.Println("cannot encrypt:", e.Error())
 			return
 		}
-		fmt.Println(frame)
 
-		msg2, e := frame.Decrypt(privateKey, client)
-		if e != nil {
-			fmt.Println("cannot decrypt:", e.Error())
+		brokerClient := &broker.Client{
+			BrokerAddress: settings.MqttBrokerAddress,
+		}
+
+		er := brokerClient.Connect()
+		if er != nil {
+			fmt.Println("cannot connect to broker:", er.Error())
 			return
 		}
-		fmt.Println(msg2)
+		defer brokerClient.Disconnect()
+
+		brokerClient.Send(frame, recipient)
+
+		
 
 	} else {
 		panic("really?")
