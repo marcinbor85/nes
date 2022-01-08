@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"time"
 	"os/user"
 
 	"github.com/akamensky/argparse"
 
 	"github.com/marcinbor85/nes/config"
 	"github.com/marcinbor85/nes/crypto"
+	"github.com/marcinbor85/nes/protocol"
 
 	"github.com/marcinbor85/pubkey/api"
 )
@@ -127,13 +129,35 @@ func main() {
 	} else if listenCmd.Happened() {
 
 	} else if sendCmd.Happened() {
-		key, err := client.GetPublicKeyByUsername(*toArg)
+		recipient := *toArg
+		_, err := client.GetPublicKeyByUsername(recipient)
 		if err != nil {
 			fmt.Println("unknown recipient username")
 			return
 		}
 
-		fmt.Println(key)
+		msg := &protocol.Message{
+			From: settings.Username,
+			To: recipient,
+			Timestamp: time.Now().UnixMilli(),
+			Message: "test",
+		}
+
+		fmt.Println(msg)
+
+		frame, e := msg.Encrypt()
+		if e != nil {
+			fmt.Println("cannot encrypt: %s", e.Error())
+			return
+		}
+		fmt.Println(frame)
+
+		msg2, e := frame.Decrypt(nil)
+		if e != nil {
+			fmt.Println("cannot decrypt: %s", e.Error())
+			return
+		}
+		fmt.Println(msg2)
 
 	} else {
 		panic("really?")
