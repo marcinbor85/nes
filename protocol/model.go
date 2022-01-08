@@ -5,8 +5,8 @@ import (
 )
 
 type Frame struct {
-	Message string `json:"message"`
-	Hash	string `json:"hash"`
+	Ciphertext	string `json:"ciphertext"`
+	Signature	string `json:"signature"`
 }
 
 type Message struct {

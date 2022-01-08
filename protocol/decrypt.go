@@ -1,14 +1,19 @@
 package protocol
 
 import (
-	"crypto/rsa"
 	"encoding/base64"
+	"crypto"
+	"crypto/sha256"
+	"crypto/rand"
+	"crypto/rsa"
+
+	"github.com/marcinbor85/pubkey/api"
 )
 
-func (frm *Frame) Decrypt(privateKey *rsa.PrivateKey) (*Message, error) {
+func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Message, error) {
 	
 	// get messageEncryptedEncoded from frame
-	messageEncryptedEncoded := frm.Message
+	messageEncryptedEncoded := frame.Ciphertext
 	
 	// decode messageEncryptedEncoded from base64 
 	messageEncrypted, err := base64.URLEncoding.DecodeString(messageEncryptedEncoded)
@@ -16,15 +21,39 @@ func (frm *Frame) Decrypt(privateKey *rsa.PrivateKey) (*Message, error) {
 		return nil, err
 	}
 
-	// TODO: decrypt messageEncrypted using private_key (decrypting)
-	msg := string(messageEncrypted)
-
-	message, err := MessageFromString(msg)
+	// decrypt messageEncrypted using privateKey
+	messageBin, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, messageEncrypted)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: verify sign
+	messageString := string(messageBin)
+
+	message, err := MessageFromString(messageString)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKey, ee := client.GetPublicKeyByUsername(message.From)
+	if ee != nil {
+		return nil, ee
+	}
+
+	// calculate hash of messageBin
+	hash32 := sha256.Sum256(messageBin)
+	hash := hash32[:]
+
+	// get signatureEncoded from frame
+	signatureEncoded := frame.Signature
+	
+	// decode signatureEncoded from base64 
+	signature, err := base64.URLEncoding.DecodeString(signatureEncoded)
+
+	// verify signature using privateKey
+	err = rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, hash, signature)
+	if err != nil {
+		return nil, err
+	}
 
 	return message, nil
 

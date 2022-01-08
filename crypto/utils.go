@@ -27,6 +27,20 @@ func DecodePublicKey(pemkey string) (*rsa.PublicKey, error) {
 	return key, nil
 }
 
+func DecodePrivateKey(pemkey string) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(pemkey))
+	if block == nil {
+		return nil, errors.New("decode key error")
+	}
+
+	prv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return prv, nil
+}
+
 func EncodeMessage(msg []byte, pubkey *rsa.PublicKey) ([]byte, error) {
 	hash := sha256.New()
 

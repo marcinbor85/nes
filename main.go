@@ -130,8 +130,28 @@ func main() {
 
 	} else if sendCmd.Happened() {
 		recipient := *toArg
-		_, err := client.GetPublicKeyByUsername(recipient)
+
+		// TODO: check if local user exist
+
+		f, e := os.Open(settings.PrivateKeyFile)
+		if e != nil {
+			fmt.Println("cannot open private key file")
+			return
+		}
+		defer f.Close()
+
+		bytesBuf := &bytes.Buffer{}
+		bytesBuf.ReadFrom(f)
+		privateKeyPem := bytesBuf.String()
+
+		privateKey, err := crypto.DecodePrivateKey(privateKeyPem)
 		if err != nil {
+			fmt.Println("cannot decode private key")
+			return
+		}
+
+		publicKey, ee := client.GetPublicKeyByUsername(recipient)
+		if ee != nil {
 			fmt.Println("unknown recipient username")
 			return
 		}
@@ -140,21 +160,21 @@ func main() {
 			From: settings.Username,
 			To: recipient,
 			Timestamp: time.Now().UnixMilli(),
-			Message: "test",
+			Message: "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
 		}
 
 		fmt.Println(msg)
 
-		frame, e := msg.Encrypt()
+		frame, e := msg.Encrypt(publicKey, privateKey)
 		if e != nil {
-			fmt.Println("cannot encrypt: %s", e.Error())
+			fmt.Println("cannot encrypt:", e.Error())
 			return
 		}
 		fmt.Println(frame)
 
-		msg2, e := frame.Decrypt(nil)
+		msg2, e := frame.Decrypt(privateKey, client)
 		if e != nil {
-			fmt.Println("cannot decrypt: %s", e.Error())
+			fmt.Println("cannot decrypt:", e.Error())
 			return
 		}
 		fmt.Println(msg2)
