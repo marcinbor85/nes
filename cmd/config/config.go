@@ -1,8 +1,8 @@
 package config
 
 import (
+	"os"
 	"fmt"
-
 	"github.com/akamensky/argparse"
 
 	"github.com/marcinbor85/nes/cmd"
@@ -10,7 +10,8 @@ import (
 )
 
 type ConfigContext struct {
-	Dump *bool
+	Show  *bool
+	Store *bool
 }
 
 var Cmd = &cmd.Command{
@@ -24,19 +25,37 @@ var Cmd = &cmd.Command{
 func Init(c *cmd.Command) {
 	ctx := c.Context.(*ConfigContext)
 	
-	ctx.Dump = c.Cmd.Flag("d", "dump", &argparse.Options{
+	ctx.Show = c.Cmd.Flag("s", "show", &argparse.Options{
 		Required: false,
-		Help:     `Dump configuration file.`,
+		Help:     `Show configuration.`,
+	})
+
+	ctx.Store = c.Cmd.Flag("S", "store", &argparse.Options{
+		Required: false,
+		Help:     `Store configuration.`,
 	})
 }
 
 func Logic(c *cmd.Command) {
 	ctx := c.Context.(*ConfigContext)
 
-	if (*ctx.Dump) {
+	if (*ctx.Show) {
 		fmt.Print(common.G)
-		return
 	}
 
-	fmt.Print(c.Cmd.Usage(nil))
+	if (*ctx.Store) {
+		file, err := os.Create(common.G.ConfigFile)
+		if err != nil {
+			fmt.Println("Cannot create config file:", err.Error())
+			return
+		}
+		defer file.Close()
+
+		file.WriteString(common.G.String())
+		fmt.Println("Config file saved.")
+	}
+
+	if (!*ctx.Show && !*ctx.Store) {
+		fmt.Print(c.Cmd.Usage(nil))
+	}
 }

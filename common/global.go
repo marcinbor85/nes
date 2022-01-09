@@ -10,6 +10,7 @@ type Settings struct {
 	PrivateKeyFile    string
 	PublicKeyFile     string
 	Username          string
+	ConfigFile        string
 }
 
 var G = &Settings{}

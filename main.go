@@ -24,9 +24,9 @@ import (
 const (
 	MQTT_BROKER_ADDRESS_DEFAULT = "tcp://test.mosquitto.org:1883"
 	PUBKEY_ADDRESS_DEFAULT      = "https://microshell.pl/pubkey"
-	CONFIG_FILE_DEFAULT         = ".env"
 
 	APP_SETTINGS_HOME_DIR       = ".nes"
+	APP_SETTINGS_CONFIG_FILE    = "config"
 )
 
 func main() {
@@ -64,8 +64,8 @@ func main() {
 
 	configArg := parser.String("c", "config", &argparse.Options{
 		Required: false,
-		Help:     `Optional config file. Supported fields: MQTT_BROKER_ADDRESS, PUBKEY_ADDRESS, PRIVATE_KEY_FILE, PUBLIC_KEY_FILE, USERNAME`,
-		Default:  CONFIG_FILE_DEFAULT,
+		Help:     `Optional config file. Supported fields: MQTT_BROKER_ADDRESS, PUBKEY_ADDRESS, PRIVATE_KEY_FILE, PUBLIC_KEY_FILE, USERNAME. Default: ~/` + APP_SETTINGS_HOME_DIR + `/` + APP_SETTINGS_CONFIG_FILE,
+		Default:  nil,
 	})
 
 	commands := []*cmd.Command{
@@ -86,16 +86,27 @@ func main() {
 		return
 	}
 
-	cfg.Init(*configArg)
-
-	common.G.MqttBrokerAddress = cfg.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
-	common.G.PubKeyAddress = cfg.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
-	
 	osUser, err := user.Current()
 	if err != nil {
 		panic(err.Error())
 	}
-	
+
+	appDir := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR)
+	err = os.MkdirAll(appDir, os.ModePerm)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	configFile := path.Join(appDir, APP_SETTINGS_CONFIG_FILE)
+	if *configArg != "" {
+		configFile = *configArg
+	}
+	common.G.ConfigFile = configFile
+
+	cfg.Init(common.G.ConfigFile)
+
+	common.G.MqttBrokerAddress = cfg.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
+	common.G.PubKeyAddress = cfg.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
 	common.G.Username = cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
 
 	keyFilename := strings.Join([]string{common.G.Username, "rsa"}, "-")
