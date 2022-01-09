@@ -34,7 +34,7 @@ func Logic(c *cmd.Command) {
 	ctx := c.Context.(*ConfigContext)
 
 	if (*ctx.Dump) {
-		fmt.Print(common.G.Settings)
+		fmt.Print(common.G)
 		return
 	}
 

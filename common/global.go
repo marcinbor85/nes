@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"github.com/marcinbor85/pubkey/api"
 )
 
 type Settings struct {
@@ -12,12 +11,7 @@ type Settings struct {
 	Username          string
 }
 
-type Global struct {
-	PubkeyClient	*api.Client
-	Settings		*Settings
-}
-
-var G = &Global{}
+var G = &Settings{}
 
 func (s *Settings) String() string {
 	vals := []struct{Key, Val string}{

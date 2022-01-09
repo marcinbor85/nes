@@ -18,8 +18,6 @@ import (
 	"github.com/marcinbor85/nes/cmd/listen"
 	"github.com/marcinbor85/nes/cmd/register"
 	"github.com/marcinbor85/nes/cmd/config"
-
-	"github.com/marcinbor85/pubkey/api"
 )
 
 const (
@@ -82,27 +80,22 @@ func main() {
 
 	cfg.Init(*configArg)
 
-	common.G.Settings = &common.Settings{}
-	common.G.Settings.MqttBrokerAddress = cfg.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
-	common.G.Settings.PubKeyAddress = cfg.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
+	common.G.MqttBrokerAddress = cfg.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
+	common.G.PubKeyAddress = cfg.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
 	
 	osUser, err := user.Current()
 	if err != nil {
 		panic(err.Error())
 	}
 	
-	common.G.Settings.Username = cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
+	common.G.Username = cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
 
-	keyFilename := strings.Join([]string{common.G.Settings.Username, "rsa"}, "-")
+	keyFilename := strings.Join([]string{common.G.Username, "rsa"}, "-")
 	defPrivateKeyFile := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
 
-	common.G.Settings.PrivateKeyFile = cfg.Alternate(*privateArg, "PRIVATE_KEY_FILE", defPrivateKeyFile)
+	common.G.PrivateKeyFile = cfg.Alternate(*privateArg, "PRIVATE_KEY_FILE", defPrivateKeyFile)
 
 	crypto.Init()
-
-	common.G.PubkeyClient = &api.Client{
-		Address: common.G.Settings.PubKeyAddress,
-	}
 
 	for _, c := range commands {
 		if c.IsInvoked() {

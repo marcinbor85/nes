@@ -9,6 +9,8 @@ import (
 	"github.com/marcinbor85/nes/broker"
 	"github.com/marcinbor85/nes/common"
 	"github.com/marcinbor85/nes/crypto/rsa"
+
+	"github.com/marcinbor85/pubkey/api"
 )
 
 type ListenContext struct {
@@ -28,17 +30,21 @@ func Init(c *cmd.Command) {
 func Logic(c *cmd.Command) {
 	// TODO: check if local user exist
 
-	privateKey, err := rsa.LoadPrivateKey(common.G.Settings.PrivateKeyFile)
+	pubkeyClient := &api.Client{
+		Address: common.G.PubKeyAddress,
+	}
+
+	privateKey, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {
 		fmt.Println("cannot load private key:", err.Error())
 		return
 	}
 
 	brokerClient := &broker.Client{
-		BrokerAddress: common.G.Settings.MqttBrokerAddress,
-		Recipient: common.G.Settings.Username,
+		BrokerAddress: common.G.MqttBrokerAddress,
+		Recipient: common.G.Username,
 		OnFrame: func(client *broker.Client, frame *protocol.Frame) {
-			msg, e := frame.Decrypt(privateKey, common.G.PubkeyClient)
+			msg, e := frame.Decrypt(privateKey, pubkeyClient)
 			if e != nil {
 				fmt.Println("cannot decrypt:", e.Error())
 				return

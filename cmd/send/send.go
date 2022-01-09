@@ -11,6 +11,8 @@ import (
 	"github.com/marcinbor85/nes/broker"
 	"github.com/marcinbor85/nes/common"
 	"github.com/marcinbor85/nes/crypto/rsa"
+
+	"github.com/marcinbor85/pubkey/api"
 )
 
 type SendContext struct {
@@ -39,20 +41,24 @@ func Logic(c *cmd.Command) {
 
 	// TODO: check if local user exist
 
-	publicKey, apiErr := common.G.PubkeyClient.GetPublicKeyByUsername(recipient)
+	pubkeyClient := &api.Client{
+		Address: common.G.PubKeyAddress,
+	}
+
+	publicKey, apiErr := pubkeyClient.GetPublicKeyByUsername(recipient)
 	if apiErr != nil {
 		fmt.Println("unknown recipient username")
 		return
 	}
 
-	privateKey, err := rsa.LoadPrivateKey(common.G.Settings.PrivateKeyFile)
+	privateKey, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {
 		fmt.Println("cannot load private key:", err.Error())
 		return
 	}
 
 	msg := &protocol.Message{
-		From: common.G.Settings.Username,
+		From: common.G.Username,
 		To: recipient,
 		Timestamp: time.Now().UnixMilli(),
 		Message: *ctx.Message,
@@ -67,7 +73,7 @@ func Logic(c *cmd.Command) {
 	}
 
 	brokerClient := &broker.Client{
-		BrokerAddress: common.G.Settings.MqttBrokerAddress,
+		BrokerAddress: common.G.MqttBrokerAddress,
 	}
 
 	er := brokerClient.Connect()

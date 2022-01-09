@@ -9,6 +9,8 @@ import (
 
 	"github.com/marcinbor85/nes/cmd"
 	"github.com/marcinbor85/nes/common"
+
+	"github.com/marcinbor85/pubkey/api"
 )
 
 type RegisterContext struct {
@@ -51,7 +53,11 @@ func Logic(c *cmd.Command) {
 	bytesBuf.ReadFrom(f)
 	publicKeyPem := bytesBuf.String()
 
-	err := common.G.PubkeyClient.RegisterNewUsername(common.G.Settings.Username, *ctx.Email, publicKeyPem)
+	pubkeyClient := &api.Client{
+		Address: common.G.PubKeyAddress,
+	}
+
+	err := pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
 	if err != nil {
 		fmt.Printf(err.E.Error())
 		return
