@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/user"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/marcinbor85/nes/cmd/send"
 	"github.com/marcinbor85/nes/cmd/listen"
+	"github.com/marcinbor85/nes/cmd/register"
 
 	"github.com/marcinbor85/pubkey/api"
 )
@@ -58,16 +58,7 @@ func main() {
 		Default:  CONFIG_FILE_DEFAULT,
 	})
 
-	registerCmd := parser.NewCommand("register", "register username")
-	publicArg := registerCmd.String("P", "public", &argparse.Options{
-		Required: true,
-		Help:     `Public key file.`,
-	})
-	emailArg := registerCmd.String("e", "email", &argparse.Options{
-		Required: true,
-		Help:     `User email (need to activate username).`,
-	})
-
+	register.RegisterCmd.Register(parser)
 	listen.ListenCmd.Register(parser)
 	send.SendCmd.Register(parser)
 
@@ -98,26 +89,8 @@ func main() {
 		Address: common.G.Settings.PubKeyAddress,
 	}
 
-	if registerCmd.Happened() {
-
-		f, e := os.Open(*publicArg)
-		if e != nil {
-			fmt.Println("cannot open public key file")
-			return
-		}
-		defer f.Close()
-
-		bytesBuf := &bytes.Buffer{}
-		bytesBuf.ReadFrom(f)
-		publicKeyPem := bytesBuf.String()
-
-		err := common.G.PubkeyClient.RegisterNewUsername(common.G.Settings.Username, *emailArg, publicKeyPem)
-		if err != nil {
-			fmt.Printf(err.E.Error())
-			return
-		}
-		fmt.Println("username registered. check email for activation.")
-
+	if register.RegisterCmd.IsInvoked() {
+		register.RegisterCmd.Service()
 	} else if listen.ListenCmd.IsInvoked() {
 		listen.ListenCmd.Service()
 	} else if send.SendCmd.IsInvoked() {
