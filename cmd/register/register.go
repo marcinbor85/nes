@@ -59,7 +59,7 @@ func Logic(c *cmd.Command) {
 
 	err := pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
 	if err != nil {
-		fmt.Printf(err.E.Error())
+		fmt.Println("cannot register username:", err.Error())
 		return
 	}
 	fmt.Println("username registered. check email for activation.")

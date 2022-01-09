@@ -39,15 +39,13 @@ func Logic(c *cmd.Command) {
 
 	recipient := *ctx.To
 
-	// TODO: check if local user exist
-
 	pubkeyClient := &api.Client{
 		Address: common.G.PubKeyAddress,
 	}
 
-	publicKey, apiErr := pubkeyClient.GetPublicKeyByUsername(recipient)
-	if apiErr != nil {
-		fmt.Println("unknown recipient username")
+	publicKey, err := pubkeyClient.GetPublicKeyByUsername(recipient)
+	if err != nil {
+		fmt.Println("cannot get public key:", err.Error())
 		return
 	}
 
@@ -64,11 +62,9 @@ func Logic(c *cmd.Command) {
 		Message: *ctx.Message,
 	}
 
-	fmt.Println(msg)
-
-	frame, e := msg.Encrypt(publicKey, privateKey)
-	if e != nil {
-		fmt.Println("cannot encrypt:", e.Error())
+	frame, err := msg.Encrypt(publicKey, privateKey)
+	if err != nil {
+		fmt.Println("cannot encrypt:", err.Error())
 		return
 	}
 
@@ -76,9 +72,9 @@ func Logic(c *cmd.Command) {
 		BrokerAddress: common.G.MqttBrokerAddress,
 	}
 
-	er := brokerClient.Connect()
-	if er != nil {
-		fmt.Println("cannot connect to broker:", er.Error())
+	err = brokerClient.Connect()
+	if err != nil {
+		fmt.Println("cannot connect to broker:", err.Error())
 		return
 	}
 	defer brokerClient.Disconnect()

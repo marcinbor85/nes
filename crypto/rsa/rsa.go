@@ -17,7 +17,7 @@ import (
 func DecodePublicKey(pemkey string) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode([]byte(pemkey))
 	if block == nil {
-		return nil, errors.New("decode key error")
+		return nil, errors.New("decode public key error")
 	}
 
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
@@ -32,7 +32,7 @@ func DecodePublicKey(pemkey string) (*rsa.PublicKey, error) {
 func DecodePrivateKey(pemkey string) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode([]byte(pemkey))
 	if block == nil {
-		return nil, errors.New("decode key error")
+		return nil, errors.New("decode private key error")
 	}
 
 	prv, err := x509.ParsePKCS1PrivateKey(block.Bytes)

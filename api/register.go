@@ -16,7 +16,7 @@ type RegisterUsernameRequest struct {
 	Email     string `json:"email"`
 }
 
-func (client *Client) RegisterNewUsername(username string, email string, publicKey string) *RequestError {
+func (client *Client) RegisterNewUsername(username string, email string, publicKey string) error {
 	url := strings.Join([]string{client.Address, "user"}, "/")
 	req := &RegisterUsernameRequest{
 		Username:  username,
@@ -25,23 +25,23 @@ func (client *Client) RegisterNewUsername(username string, email string, publicK
 	}
 	reqJson, err := json.Marshal(req)
 	if err != nil {
-		return &RequestError{500, err}
+		return err
 	}
 
 	reqBody := bytes.NewBuffer(reqJson)
 	resp, err := http.Post(url, "application/json", reqBody)
 	if err != nil {
-		return &RequestError{500, err}
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return &RequestError{resp.StatusCode, err}
+			return err
 		}
 
-		return &RequestError{resp.StatusCode, errors.New(string(bodyBytes))}
+		return errors.New(strings.Trim(string(bodyBytes), "\r\n"))
 	}
 	return nil
 }
