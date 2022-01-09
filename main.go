@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"bufio"
 	"os/user"
 
 	"github.com/akamensky/argparse"
@@ -15,18 +14,12 @@ import (
 	"github.com/marcinbor85/nes/crypto/rsa"
 	"github.com/marcinbor85/nes/protocol"
 	"github.com/marcinbor85/nes/broker"
+	"github.com/marcinbor85/nes/common"
+
+	"github.com/marcinbor85/nes/cmd/send"
 
 	"github.com/marcinbor85/pubkey/api"
 )
-
-type Settings struct {
-	MqttBrokerAddress string
-	PubKeyAddress     string
-	PrivateKeyFile    string
-	Username          string
-}
-
-var settings = &Settings{}
 
 const (
 	MQTT_BROKER_ADDRESS_DEFAULT = "tcp://test.mosquitto.org:1883"
@@ -80,9 +73,7 @@ func main() {
 
 	listenCmd := parser.NewCommand("listen", "listen to messages")
 
-	sendCmd := parser.NewCommand("send", "send message to recipient")
-	toArg := sendCmd.String("t", "to", &argparse.Options{Required: true, Help: "Recipient username"})
-	_ = sendCmd.Flag("i", "interactive", &argparse.Options{Help: "Enable interactive mode"})
+	send.SendCmd.Register(parser)
 
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -92,21 +83,23 @@ func main() {
 
 	config.Init(*configArg)
 
-	settings.MqttBrokerAddress = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
-	settings.PubKeyAddress = config.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
-	settings.PrivateKeyFile = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", PRIVATE_KEY_FILE_DEFAULT)
+
+	common.G.Settings = &common.Settings{}
+	common.G.Settings.MqttBrokerAddress = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
+	common.G.Settings.PubKeyAddress = config.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
+	common.G.Settings.PrivateKeyFile = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", PRIVATE_KEY_FILE_DEFAULT)
 
 	osUser, err := user.Current()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	settings.Username = config.Alternate(*usernameArg, "USERNAME", osUser.Username)
+	common.G.Settings.Username = config.Alternate(*usernameArg, "USERNAME", osUser.Username)
 
 	crypto.Init()
 
-	pubkeyClient := &api.Client{
-		Address: settings.PubKeyAddress,
+	common.G.PubkeyClient = &api.Client{
+		Address: common.G.Settings.PubKeyAddress,
 	}
 
 	if registerCmd.Happened() {
@@ -122,7 +115,7 @@ func main() {
 		bytesBuf.ReadFrom(f)
 		publicKeyPem := bytesBuf.String()
 
-		err := pubkeyClient.RegisterNewUsername(settings.Username, *emailArg, publicKeyPem)
+		err := common.G.PubkeyClient.RegisterNewUsername(common.G.Settings.Username, *emailArg, publicKeyPem)
 		if err != nil {
 			fmt.Printf(err.E.Error())
 			return
@@ -132,17 +125,17 @@ func main() {
 	} else if listenCmd.Happened() {
 		// TODO: check if local user exist
 
-		privateKey, err := rsa.LoadPrivateKey(settings.PrivateKeyFile)
+		privateKey, err := rsa.LoadPrivateKey(common.G.Settings.PrivateKeyFile)
 		if err != nil {
 			fmt.Println("cannot load private key:", err.Error())
 			return
 		}
 
 		brokerClient := &broker.Client{
-			BrokerAddress: settings.MqttBrokerAddress,
-			Recipient: settings.Username,
+			BrokerAddress: common.G.Settings.MqttBrokerAddress,
+			Recipient: common.G.Settings.Username,
 			OnFrame: func(client *broker.Client, frame *protocol.Frame) {
-				msg, e := frame.Decrypt(privateKey, pubkeyClient)
+				msg, e := frame.Decrypt(privateKey, common.G.PubkeyClient)
 				if e != nil {
 					fmt.Println("cannot decrypt:", e.Error())
 					return
@@ -165,57 +158,8 @@ func main() {
 		var s string
     	fmt.Scanln(&s)
 
-	} else if sendCmd.Happened() {
-		recipient := *toArg
-
-		// TODO: check if local user exist
-
-		publicKey, apiErr := pubkeyClient.GetPublicKeyByUsername(recipient)
-		if apiErr != nil {
-			fmt.Println("unknown recipient username")
-			return
-		}
-
-		privateKey, err := rsa.LoadPrivateKey(settings.PrivateKeyFile)
-		if err != nil {
-			fmt.Println("cannot load private key:", err.Error())
-			return
-		}
-
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Scan()
-		message := scanner.Text()
-
-		msg := &protocol.Message{
-			From: settings.Username,
-			To: recipient,
-			Timestamp: time.Now().UnixMilli(),
-			Message: message,
-		}
-
-		fmt.Println(msg)
-
-		frame, e := msg.Encrypt(publicKey, privateKey)
-		if e != nil {
-			fmt.Println("cannot encrypt:", e.Error())
-			return
-		}
-
-		brokerClient := &broker.Client{
-			BrokerAddress: settings.MqttBrokerAddress,
-		}
-
-		er := brokerClient.Connect()
-		if er != nil {
-			fmt.Println("cannot connect to broker:", er.Error())
-			return
-		}
-		defer brokerClient.Disconnect()
-
-		brokerClient.Send(frame, recipient)
-
-		
-
+	} else if send.SendCmd.IsInvoked() {
+		send.SendCmd.Service()
 	} else {
 		panic("really?")
 	}

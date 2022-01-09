@@ -4,3 +4,5 @@ TODO:
 - find private key by pattern <username>-rsa (current dir, and user home)
 - message by cli argument
 - verbose mode (show json frames and messages)
+- refactor, move commands logic to separated files
+- errors handling and logs
