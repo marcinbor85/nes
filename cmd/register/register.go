@@ -18,7 +18,7 @@ type RegisterContext struct {
 
 var Cmd = &cmd.Command{
 	Name: "register",
-	Help: "register username at pubkey service",
+	Help: "Register username at pubkey service",
 	Context: &RegisterContext{},
 	Init: Init,
 	Logic: Logic,

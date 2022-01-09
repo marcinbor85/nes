@@ -20,7 +20,7 @@ type SendContext struct {
 
 var Cmd = &cmd.Command{
 	Name: "send",
-	Help: "send message to recipient",
+	Help: "Send message to recipient",
 	Context: &SendContext{},
 	Init: Init,
 	Logic: Logic,

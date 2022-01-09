@@ -16,7 +16,7 @@ type ListenContext struct {
 
 var Cmd = &cmd.Command{
 	Name: "listen",
-	Help: "listen to messages",
+	Help: "Listen to messages",
 	Context: &ListenContext{},
 	Init: Init,
 	Logic: Logic,
