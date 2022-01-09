@@ -8,6 +8,7 @@ type Settings struct {
 	MqttBrokerAddress string
 	PubKeyAddress     string
 	PrivateKeyFile    string
+	PublicKeyFile     string
 	Username          string
 }
 
@@ -18,6 +19,7 @@ func (s *Settings) String() string {
 		{"MQTT_BROKER_ADDRESS", s.MqttBrokerAddress},
 		{"PUBKEY_ADDRESS", s.PubKeyAddress},
 		{"PRIVATE_KEY_FILE", s.PrivateKeyFile},
+		{"PUBLIC_KEY_FILE", s.PublicKeyFile},
 		{"USERNAME", s.Username},
 	}
 	ret := ""

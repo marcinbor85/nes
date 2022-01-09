@@ -43,9 +43,15 @@ func main() {
 		Default:  nil,
 	})
 
-	privateArg := parser.String("k", "key", &argparse.Options{
+	privateArg := parser.String("k", "private", &argparse.Options{
 		Required: false,
-		Help:     `Private key file. Default: ~/` + APP_SETTINGS_HOME_DIR + `/<user>_rsa`,
+		Help:     `Private key file. Default: ~/` + APP_SETTINGS_HOME_DIR + `/<user>-rsa`,
+		Default:  nil,
+	})
+
+	publicArg := parser.String("K", "public", &argparse.Options{
+		Required: false,
+		Help:     `Public key file. Default: ~/` + APP_SETTINGS_HOME_DIR + `/<user>-rsa.pub`,
 		Default:  nil,
 	})
 
@@ -57,7 +63,7 @@ func main() {
 
 	configArg := parser.String("c", "config", &argparse.Options{
 		Required: false,
-		Help:     `Optional config file. Supported fields: MQTT_BROKER_ADDRESS, PUBKEY_ADDRESS, PRIVATE_KEY_FILE, USERNAME`,
+		Help:     `Optional config file. Supported fields: MQTT_BROKER_ADDRESS, PUBKEY_ADDRESS, PRIVATE_KEY_FILE, PUBLIC_KEY_FILE, USERNAME`,
 		Default:  CONFIG_FILE_DEFAULT,
 	})
 
@@ -91,9 +97,12 @@ func main() {
 	common.G.Username = cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
 
 	keyFilename := strings.Join([]string{common.G.Username, "rsa"}, "-")
-	defPrivateKeyFile := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
+	defKeyFile := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
+	common.G.PrivateKeyFile = cfg.Alternate(*privateArg, "PRIVATE_KEY_FILE", defKeyFile)
 
-	common.G.PrivateKeyFile = cfg.Alternate(*privateArg, "PRIVATE_KEY_FILE", defPrivateKeyFile)
+	keyFilename = strings.Join([]string{common.G.Username, "rsa.pub"}, "-")
+	defKeyFile = path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
+	common.G.PublicKeyFile = cfg.Alternate(*publicArg, "PUBLIC_KEY_FILE", defKeyFile)
 
 	crypto.Init()
 

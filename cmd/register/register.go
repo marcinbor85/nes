@@ -14,7 +14,6 @@ import (
 )
 
 type RegisterContext struct {
-	PublicKeyFile *string
 	Email		  *string
 }
 
@@ -29,10 +28,6 @@ var Cmd = &cmd.Command{
 func Init(c *cmd.Command) {
 	ctx := c.Context.(*RegisterContext)
 	
-	ctx.PublicKeyFile = c.Cmd.String("P", "public", &argparse.Options{
-		Required: true,
-		Help:     `Public key file.`,
-	})
 	ctx.Email = c.Cmd.String("e", "email", &argparse.Options{
 		Required: true,
 		Help:     `User email (need to activate username).`,
@@ -42,7 +37,7 @@ func Init(c *cmd.Command) {
 func Logic(c *cmd.Command) {
 	ctx := c.Context.(*RegisterContext)
 
-	f, e := os.Open(*ctx.PublicKeyFile)
+	f, e := os.Open(common.G.PublicKeyFile)
 	if e != nil {
 		fmt.Println("cannot open public key file")
 		return
