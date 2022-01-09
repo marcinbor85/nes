@@ -38,7 +38,7 @@ func Logic(c *cmd.Command) {
 
 	_, publicKeyPem, err := rsa.LoadPublicKey(common.G.PublicKeyFile)
 	if err != nil {
-		fmt.Println("cannot load public key:", err.Error())
+		fmt.Println("Cannot load public key:", err.Error())
 		return
 	}
 
@@ -48,8 +48,8 @@ func Logic(c *cmd.Command) {
 
 	err = pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
 	if err != nil {
-		fmt.Println("cannot register username:", err.Error())
+		fmt.Println("Cannot register username:", err.Error())
 		return
 	}
-	fmt.Println("username registered. check email for activation.")
+	fmt.Println("Username registered. Check email for activation.")
 }

@@ -45,13 +45,13 @@ func Logic(c *cmd.Command) {
 
 	publicKey, err := pubkeyClient.GetPublicKeyByUsername(recipient)
 	if err != nil {
-		fmt.Println("cannot get recipient public key:", err.Error())
+		fmt.Println("Cannot get recipient public key:", err.Error())
 		return
 	}
 
 	privateKey, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {
-		fmt.Println("cannot load private key:", err.Error())
+		fmt.Println("Cannot load private key:", err.Error())
 		return
 	}
 
@@ -64,7 +64,7 @@ func Logic(c *cmd.Command) {
 
 	frame, err := msg.Encrypt(publicKey, privateKey)
 	if err != nil {
-		fmt.Println("cannot encrypt:", err.Error())
+		fmt.Println("Cannot encrypt message:", err.Error())
 		return
 	}
 
@@ -74,10 +74,12 @@ func Logic(c *cmd.Command) {
 
 	err = brokerClient.Connect()
 	if err != nil {
-		fmt.Println("cannot connect to broker:", err.Error())
+		fmt.Println("Cannot connect to broker:", err.Error())
 		return
 	}
 	defer brokerClient.Disconnect()
 
 	brokerClient.Send(frame, recipient)
+
+	fmt.Println("Message sended successfully.")
 }

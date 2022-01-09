@@ -36,7 +36,7 @@ func Logic(c *cmd.Command) {
 
 	privateKey, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {
-		fmt.Println("cannot load private key:", err.Error())
+		fmt.Println("Cannot load private key:", err.Error())
 		return
 	}
 
@@ -46,7 +46,6 @@ func Logic(c *cmd.Command) {
 		OnFrame: func(client *broker.Client, frame *protocol.Frame) {
 			msg, e := frame.Decrypt(privateKey, pubkeyClient)
 			if e != nil {
-				fmt.Println("cannot decrypt:", e.Error())
 				return
 			}
 			t := time.UnixMilli(msg.Timestamp)
@@ -58,7 +57,7 @@ func Logic(c *cmd.Command) {
 
 	er := brokerClient.Connect()
 	if er != nil {
-		fmt.Println("cannot connect to broker:", er.Error())
+		fmt.Println("Cannot connect to broker:", er.Error())
 		return
 	}
 	defer brokerClient.Disconnect()
@@ -66,5 +65,4 @@ func Logic(c *cmd.Command) {
 	fmt.Println("Press the Enter Key to exit.")
 	var s string
 	fmt.Scanln(&s)
-
 }
