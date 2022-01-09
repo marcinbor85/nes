@@ -2,12 +2,11 @@ package protocol
 
 import (
 	"encoding/base64"
-	"crypto"
-	"crypto/sha256"
 	"crypto/rand"
 	"crypto/rsa"
 
 	"github.com/marcinbor85/nes/crypto/aes"
+	r "github.com/marcinbor85/nes/crypto/rsa"
 )
 
 func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (*Frame, error) {
@@ -28,7 +27,7 @@ func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.Privat
 	messageEncryptedEncoded := base64.URLEncoding.EncodeToString(messageEncrypted)
 
 	// encrypt randomKey using publicKey
-	randomKeyEncrypted, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, randomKey)
+	randomKeyEncrypted, err := r.Encrypt(randomKey, publicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +35,8 @@ func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.Privat
 	// encode randomKeyEncrypted to base64
 	randomKeyEncryptedEncoded := base64.URLEncoding.EncodeToString(randomKeyEncrypted)
 
-	// calculate hash of messageBin
-	messageHash32 := sha256.Sum256(messageBin)
-	messageHash := messageHash32[:]
-
 	// sign messageBin hash using privateKey
-	messageSignature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, messageHash)
+	messageSignature, err := r.Sign(messageBin, privateKey)
 	if err != nil {
 		return nil, err
 	}

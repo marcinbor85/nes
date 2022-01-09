@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"time"
 	"math/rand"
 	"github.com/eclipse/paho.mqtt.golang"
 
@@ -15,6 +14,7 @@ type Client struct {
 	Handler			mqtt.MessageHandler
 	MqttClient		mqtt.Client
 	OnFrame			FrameHandler
+	Recipient		string
 }
 
 func GenerateClientID(n int) string {
@@ -37,8 +37,6 @@ func wait(token mqtt.Token) error {
 }
 
 func (client *Client) Connect() error {
-	rand.Seed(time.Now().UnixNano())
-
 	clientID := GenerateClientID(8)
 
 	opts := mqtt.NewClientOptions().AddBroker(client.BrokerAddress).SetClientID(clientID)
@@ -50,9 +48,7 @@ func (client *Client) Connect() error {
 			return
 		}
 
-		if client.OnFrame != nil {
-			client.OnFrame(client, frame)
-		}
+		client.OnFrame(client, frame)
 	}
 
 	opts.SetDefaultPublishHandler(onMessage)
@@ -65,16 +61,17 @@ func (client *Client) Connect() error {
 		return err
 	}
 
+	if client.OnFrame != nil && client.Recipient != "" {
+		topic := messageTopic(client.Recipient)
+		token := mqttClient.Subscribe(topic, 2, nil);
+		err := wait(token)
+		if err != nil {
+			return err
+		}
+	}
+
 	client.MqttClient = mqttClient
 	return nil
-}
-
-func (client *Client) Recv(recipient string) error {
-	topic := messageTopic(recipient)
-	token := client.MqttClient.Subscribe(topic, 2, nil);
-
-	err := wait(token)
-	return err
 }
 
 func (client *Client) Send(frame *protocol.Frame, recipient string) error {

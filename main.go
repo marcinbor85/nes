@@ -12,6 +12,7 @@ import (
 
 	"github.com/marcinbor85/nes/config"
 	"github.com/marcinbor85/nes/crypto"
+	"github.com/marcinbor85/nes/crypto/rsa"
 	"github.com/marcinbor85/nes/protocol"
 	"github.com/marcinbor85/nes/broker"
 
@@ -131,7 +132,7 @@ func main() {
 	} else if listenCmd.Happened() {
 		// TODO: check if local user exist
 
-		privateKey, err := crypto.LoadPrivateKey(settings.PrivateKeyFile)
+		privateKey, err := rsa.LoadPrivateKey(settings.PrivateKeyFile)
 		if err != nil {
 			fmt.Println("cannot load private key:", err.Error())
 			return
@@ -139,6 +140,7 @@ func main() {
 
 		brokerClient := &broker.Client{
 			BrokerAddress: settings.MqttBrokerAddress,
+			Recipient: settings.Username,
 			OnFrame: func(client *broker.Client, frame *protocol.Frame) {
 				msg, e := frame.Decrypt(privateKey, pubkeyClient)
 				if e != nil {
@@ -147,7 +149,8 @@ func main() {
 				}
 				t := time.UnixMilli(msg.Timestamp)
 				tm := t.Format("2006-01-02 15:04:05")
-				fmt.Printf("[%s] %s > %s\n", tm, msg.From, msg.Message)
+				fmt.Printf("\x1B[2K\r")
+				fmt.Printf("[%s] %s > %s\r\n", tm, msg.From, msg.Message)
 			},
 		}
 
@@ -158,14 +161,9 @@ func main() {
 		}
 		defer brokerClient.Disconnect()
 
-		er = brokerClient.Recv(settings.Username)
-		if er != nil {
-			fmt.Println("cannot subscribe:", er.Error())
-			return
-		}
-
 		fmt.Println("Press the Enter Key to exit.")
-    	fmt.Scanln()
+		var s string
+    	fmt.Scanln(&s)
 
 	} else if sendCmd.Happened() {
 		recipient := *toArg
@@ -178,7 +176,7 @@ func main() {
 			return
 		}
 
-		privateKey, err := crypto.LoadPrivateKey(settings.PrivateKeyFile)
+		privateKey, err := rsa.LoadPrivateKey(settings.PrivateKeyFile)
 		if err != nil {
 			fmt.Println("cannot load private key:", err.Error())
 			return
