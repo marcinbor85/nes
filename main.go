@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path"
+	"strings"
 
 	"github.com/akamensky/argparse"
 
@@ -22,8 +24,9 @@ import (
 const (
 	MQTT_BROKER_ADDRESS_DEFAULT = "tcp://test.mosquitto.org:1883"
 	PUBKEY_ADDRESS_DEFAULT      = "https://microshell.pl/pubkey"
-	PRIVATE_KEY_FILE_DEFAULT    = "~/.ssh/id_rsa"
 	CONFIG_FILE_DEFAULT         = ".env"
+
+	APP_SETTINGS_HOME_DIR       = ".nes"
 )
 
 func main() {
@@ -43,7 +46,7 @@ func main() {
 
 	privateArg := parser.String("k", "key", &argparse.Options{
 		Required: false,
-		Help:     `Private key file. Default: ` + PRIVATE_KEY_FILE_DEFAULT,
+		Help:     `Private key file. Default: ~/` + APP_SETTINGS_HOME_DIR + `/<user>_rsa`,
 		Default:  nil,
 	})
 
@@ -80,14 +83,18 @@ func main() {
 	common.G.Settings = &common.Settings{}
 	common.G.Settings.MqttBrokerAddress = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
 	common.G.Settings.PubKeyAddress = config.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
-	common.G.Settings.PrivateKeyFile = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", PRIVATE_KEY_FILE_DEFAULT)
-
+	
 	osUser, err := user.Current()
 	if err != nil {
 		panic(err.Error())
 	}
-
+	
 	common.G.Settings.Username = config.Alternate(*usernameArg, "USERNAME", osUser.Username)
+
+	keyFilename := strings.Join([]string{common.G.Settings.Username, "rsa"}, "-")
+	defPrivateKeyFile := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
+
+	common.G.Settings.PrivateKeyFile = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", defPrivateKeyFile)
 
 	crypto.Init()
 
