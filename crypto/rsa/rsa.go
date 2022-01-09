@@ -43,23 +43,42 @@ func DecodePrivateKey(pemkey string) (*rsa.PrivateKey, error) {
 	return prv, nil
 }
 
-func LoadPrivateKey(filename string) (*rsa.PrivateKey, error) {
+func LoadPublicKey(filename string) (*rsa.PublicKey, string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer file.Close()
 
 	bytesBuf := &bytes.Buffer{}
 	bytesBuf.ReadFrom(file)
-	privateKeyPem := bytesBuf.String()
+	pem := bytesBuf.String()
 
-	privateKey, err := DecodePrivateKey(privateKeyPem)
+	key, err := DecodePublicKey(pem)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return privateKey, nil
+	return key, pem, nil
+}
+
+func LoadPrivateKey(filename string) (*rsa.PrivateKey, string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, "", err
+	}
+	defer file.Close()
+
+	bytesBuf := &bytes.Buffer{}
+	bytesBuf.ReadFrom(file)
+	pem := bytesBuf.String()
+
+	key, err := DecodePrivateKey(pem)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return key, pem, nil
 }
 
 func Encrypt(input []byte, publicKey *rsa.PublicKey) ([]byte, error) {

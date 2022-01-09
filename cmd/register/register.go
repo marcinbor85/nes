@@ -1,14 +1,13 @@
 package register
 
 import (
-	"os"
 	"fmt"
-	"bytes"
 
 	"github.com/akamensky/argparse"
 
 	"github.com/marcinbor85/nes/cmd"
 	"github.com/marcinbor85/nes/common"
+	"github.com/marcinbor85/nes/crypto/rsa"
 
 	"github.com/marcinbor85/nes/api"
 )
@@ -37,22 +36,17 @@ func Init(c *cmd.Command) {
 func Logic(c *cmd.Command) {
 	ctx := c.Context.(*RegisterContext)
 
-	f, e := os.Open(common.G.PublicKeyFile)
-	if e != nil {
-		fmt.Println("cannot open public key file")
+	_, publicKeyPem, err := rsa.LoadPublicKey(common.G.PublicKeyFile)
+	if err != nil {
+		fmt.Println("cannot load public key:", err.Error())
 		return
 	}
-	defer f.Close()
-
-	bytesBuf := &bytes.Buffer{}
-	bytesBuf.ReadFrom(f)
-	publicKeyPem := bytesBuf.String()
 
 	pubkeyClient := &api.Client{
 		Address: common.G.PubKeyAddress,
 	}
 
-	err := pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
+	err = pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
 	if err != nil {
 		fmt.Println("cannot register username:", err.Error())
 		return

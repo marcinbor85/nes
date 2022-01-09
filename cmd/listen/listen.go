@@ -34,7 +34,7 @@ func Logic(c *cmd.Command) {
 		Address: common.G.PubKeyAddress,
 	}
 
-	privateKey, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
+	privateKey, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {
 		fmt.Println("cannot load private key:", err.Error())
 		return
