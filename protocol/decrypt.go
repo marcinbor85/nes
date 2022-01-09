@@ -5,7 +5,7 @@ import (
 
 	"crypto/rsa"
 
-	"github.com/marcinbor85/pubkey/api"
+	"github.com/marcinbor85/nes/api"
 
 	"github.com/marcinbor85/nes/crypto/aes"
 	r "github.com/marcinbor85/nes/crypto/rsa"

@@ -10,7 +10,7 @@ import (
 	"github.com/marcinbor85/nes/common"
 	"github.com/marcinbor85/nes/crypto/rsa"
 
-	"github.com/marcinbor85/pubkey/api"
+	"github.com/marcinbor85/nes/api"
 )
 
 type ListenContext struct {
