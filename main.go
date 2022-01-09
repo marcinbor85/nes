@@ -11,6 +11,7 @@ import (
 	"github.com/marcinbor85/nes/crypto"
 	"github.com/marcinbor85/nes/common"
 
+	"github.com/marcinbor85/nes/cmd"
 	"github.com/marcinbor85/nes/cmd/send"
 	"github.com/marcinbor85/nes/cmd/listen"
 	"github.com/marcinbor85/nes/cmd/register"
@@ -58,9 +59,15 @@ func main() {
 		Default:  CONFIG_FILE_DEFAULT,
 	})
 
-	register.RegisterCmd.Register(parser)
-	listen.ListenCmd.Register(parser)
-	send.SendCmd.Register(parser)
+	commands := []*cmd.Command{
+		register.RegisterCmd,
+		listen.ListenCmd,
+		send.SendCmd,
+	}
+
+	for _, c := range commands {
+		c.Register(parser)
+	}
 
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -69,7 +76,6 @@ func main() {
 	}
 
 	config.Init(*configArg)
-
 
 	common.G.Settings = &common.Settings{}
 	common.G.Settings.MqttBrokerAddress = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
@@ -89,13 +95,10 @@ func main() {
 		Address: common.G.Settings.PubKeyAddress,
 	}
 
-	if register.RegisterCmd.IsInvoked() {
-		register.RegisterCmd.Service()
-	} else if listen.ListenCmd.IsInvoked() {
-		listen.ListenCmd.Service()
-	} else if send.SendCmd.IsInvoked() {
-		send.SendCmd.Service()
-	} else {
-		panic("really?")
+	for _, c := range commands {
+		if c.IsInvoked() {
+			c.Service()
+			break;
+		}
 	}
 }
