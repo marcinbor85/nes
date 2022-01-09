@@ -9,7 +9,7 @@ import (
 
 	"github.com/akamensky/argparse"
 
-	"github.com/marcinbor85/nes/config"
+	cfg "github.com/marcinbor85/nes/config"
 	"github.com/marcinbor85/nes/crypto"
 	"github.com/marcinbor85/nes/common"
 
@@ -17,6 +17,7 @@ import (
 	"github.com/marcinbor85/nes/cmd/send"
 	"github.com/marcinbor85/nes/cmd/listen"
 	"github.com/marcinbor85/nes/cmd/register"
+	"github.com/marcinbor85/nes/cmd/config"
 
 	"github.com/marcinbor85/pubkey/api"
 )
@@ -66,6 +67,7 @@ func main() {
 		register.Cmd,
 		listen.Cmd,
 		send.Cmd,
+		config.Cmd,
 	}
 
 	for _, c := range commands {
@@ -78,23 +80,23 @@ func main() {
 		return
 	}
 
-	config.Init(*configArg)
+	cfg.Init(*configArg)
 
 	common.G.Settings = &common.Settings{}
-	common.G.Settings.MqttBrokerAddress = config.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
-	common.G.Settings.PubKeyAddress = config.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
+	common.G.Settings.MqttBrokerAddress = cfg.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
+	common.G.Settings.PubKeyAddress = cfg.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
 	
 	osUser, err := user.Current()
 	if err != nil {
 		panic(err.Error())
 	}
 	
-	common.G.Settings.Username = config.Alternate(*usernameArg, "USERNAME", osUser.Username)
+	common.G.Settings.Username = cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
 
 	keyFilename := strings.Join([]string{common.G.Settings.Username, "rsa"}, "-")
 	defPrivateKeyFile := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
 
-	common.G.Settings.PrivateKeyFile = config.Alternate(*privateArg, "PRIVATE_KEY_FILE", defPrivateKeyFile)
+	common.G.Settings.PrivateKeyFile = cfg.Alternate(*privateArg, "PRIVATE_KEY_FILE", defPrivateKeyFile)
 
 	crypto.Init()
 
