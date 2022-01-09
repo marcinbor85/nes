@@ -27,7 +27,7 @@ const (
 )
 
 func main() {
-	parser := argparse.NewParser("commands", "NES messenger")
+	parser := argparse.NewParser("nes", "NES messenger")
 
 	brokerArg := parser.String("b", "broker", &argparse.Options{
 		Required: false,
@@ -60,9 +60,9 @@ func main() {
 	})
 
 	commands := []*cmd.Command{
-		register.RegisterCmd,
-		listen.ListenCmd,
-		send.SendCmd,
+		register.Cmd,
+		listen.Cmd,
+		send.Cmd,
 	}
 
 	for _, c := range commands {

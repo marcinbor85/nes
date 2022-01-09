@@ -16,12 +16,10 @@ type RegisterContext struct {
 	Email		  *string
 }
 
-var RegisterCtx = &RegisterContext{}
-
-var RegisterCmd = &cmd.Command{
+var Cmd = &cmd.Command{
 	Name: "register",
 	Help: "register username at pubkey service",
-	Context: RegisterCtx,
+	Context: &RegisterContext{},
 	Init: Init,
 	Logic: Logic,
 }

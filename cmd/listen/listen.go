@@ -14,12 +14,10 @@ import (
 type ListenContext struct {
 }
 
-var ListenCtx = &ListenContext{}
-
-var ListenCmd = &cmd.Command{
+var Cmd = &cmd.Command{
 	Name: "listen",
 	Help: "listen to messages",
-	Context: ListenCtx,
+	Context: &ListenContext{},
 	Init: Init,
 	Logic: Logic,
 }

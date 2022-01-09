@@ -18,12 +18,10 @@ type SendContext struct {
 	Message *string
 }
 
-var SendCtx = &SendContext{}
-
-var SendCmd = &cmd.Command{
+var Cmd = &cmd.Command{
 	Name: "send",
 	Help: "send message to recipient",
-	Context: SendCtx,
+	Context: &SendContext{},
 	Init: Init,
 	Logic: Logic,
 }
