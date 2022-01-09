@@ -45,7 +45,7 @@ func Logic(c *cmd.Command) {
 
 	publicKey, err := pubkeyClient.GetPublicKeyByUsername(recipient)
 	if err != nil {
-		fmt.Println("cannot get public key:", err.Error())
+		fmt.Println("cannot get recipient public key:", err.Error())
 		return
 	}
 

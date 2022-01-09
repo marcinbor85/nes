@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"encoding/pem"
-
+	
 	"crypto"
 	"crypto/rsa"
 	"crypto/rand"
@@ -14,19 +14,75 @@ import (
 	"crypto/x509"
 )
 
+func GenerateKeysPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
+	if err != nil {
+		return nil, nil, err
+	}
+	publicKey := privateKey.Public()
+	return privateKey, publicKey.(*rsa.PublicKey), nil
+}
+
+func PrivateKeyPem(key *rsa.PrivateKey) string {
+	keyBytes := x509.MarshalPKCS1PrivateKey(key)
+    pemBytes := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: keyBytes,
+		},
+    )
+    return string(pemBytes)
+}
+
+func PublicKeyPem(key *rsa.PublicKey) string {
+	keyBytes, _ := x509.MarshalPKIXPublicKey(key)
+    pemBytes := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "PUBLIC KEY",
+			Bytes: keyBytes,
+		},
+    )
+    return string(pemBytes)
+}
+
+func SavePrivateKey(key *rsa.PrivateKey, filename string) error {
+	pem := PrivateKeyPem(key)
+
+	file, err := os.Create(filename)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+	file.WriteString(pem)
+	return nil
+}
+
+func SavePublicKey(key *rsa.PublicKey, filename string) error {
+	pem := PublicKeyPem(key)
+
+	file, err := os.Create(filename)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+	file.WriteString(pem)
+	return nil
+}
+
 func DecodePublicKey(pemkey string) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode([]byte(pemkey))
 	if block == nil {
 		return nil, errors.New("decode public key error")
 	}
 
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	key := pub.(*rsa.PublicKey)
-	return key, nil
+	return key.(*rsa.PublicKey), nil
 }
 
 func DecodePrivateKey(pemkey string) (*rsa.PrivateKey, error) {
@@ -35,12 +91,12 @@ func DecodePrivateKey(pemkey string) (*rsa.PrivateKey, error) {
 		return nil, errors.New("decode private key error")
 	}
 
-	prv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	return prv, nil
+	return key, nil
 }
 
 func LoadPublicKey(filename string) (*rsa.PublicKey, string, error) {
