@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
+	path "path/filepath"
 	"strings"
 
 	"github.com/akamensky/argparse"
