@@ -84,5 +84,8 @@ func (client *Client) Send(frame *protocol.Frame, recipient string) error {
 }
 
 func (client *Client) Disconnect() {
+	if client == nil || client.MqttClient == nil{
+		return
+	}
 	client.MqttClient.Disconnect(250)
 }
