@@ -18,6 +18,12 @@ type GetPublicKeyResponse struct {
 }
 
 func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, error) {
+
+	cachedKey := (*client.PublicKeyCache)[username]
+	if cachedKey != nil {
+		return cachedKey, nil
+	}
+
 	url := strings.Join([]string{client.Address, "user", username}, "/")
 	resp, err := http.Get(url)
 	if err != nil {
@@ -49,6 +55,8 @@ func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, e
 	if err != nil {
 		return nil, err
 	}
+
+	(*client.PublicKeyCache)[username] = key
 
 	return key, nil
 }

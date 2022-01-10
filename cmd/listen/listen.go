@@ -28,9 +28,7 @@ func Init(c *cmd.Command) {
 }
 
 func Logic(c *cmd.Command) {
-	pubkeyClient := &api.Client{
-		Address: common.G.PubKeyAddress,
-	}
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
 
 	privateKey, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {

@@ -39,9 +39,7 @@ func Logic(c *cmd.Command) {
 
 	recipient := *ctx.To
 
-	pubkeyClient := &api.Client{
-		Address: common.G.PubKeyAddress,
-	}
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
 
 	publicKey, err := pubkeyClient.GetPublicKeyByUsername(recipient)
 	if err != nil {

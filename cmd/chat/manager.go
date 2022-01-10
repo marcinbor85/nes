@@ -27,9 +27,7 @@ type ChatManager struct {
 }
 
 func NewChatManager(chatView *ChatView, inputView *InputView, recipient string) (*ChatManager, error) {
-	pubkeyClient := &api.Client{
-		Address: common.G.PubKeyAddress,
-	}
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
 	
 	privateKey, _, err := r.LoadPrivateKey(common.G.PrivateKeyFile)
 	if err != nil {

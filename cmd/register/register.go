@@ -42,9 +42,7 @@ func Logic(c *cmd.Command) {
 		return
 	}
 
-	pubkeyClient := &api.Client{
-		Address: common.G.PubKeyAddress,
-	}
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
 
 	err = pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
 	if err != nil {
