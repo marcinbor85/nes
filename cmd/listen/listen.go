@@ -28,8 +28,6 @@ func Init(c *cmd.Command) {
 }
 
 func Logic(c *cmd.Command) {
-	// TODO: check if local user exist
-
 	pubkeyClient := &api.Client{
 		Address: common.G.PubKeyAddress,
 	}
@@ -49,9 +47,8 @@ func Logic(c *cmd.Command) {
 				return
 			}
 			t := time.UnixMilli(msg.Timestamp)
-			tm := t.Format("2006-01-02 15:04:05")
-			fmt.Printf("\x1B[2K\r")
-			fmt.Printf("[%s] %s > %s\r\n", tm, msg.From, msg.Message)
+			tm := t.Format("15:04:05")
+			fmt.Printf("[%s] %s > %s\n", tm, msg.From, msg.Message)
 		},
 	}
 
