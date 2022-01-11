@@ -109,7 +109,8 @@ func main() {
 
 	common.G.MqttBrokerAddress = cfg.Alternate(*brokerArg, "MQTT_BROKER_ADDRESS", MQTT_BROKER_ADDRESS_DEFAULT)
 	common.G.PubKeyAddress = cfg.Alternate(*providerArg, "PUBKEY_ADDRESS", PUBKEY_ADDRESS_DEFAULT)
-	common.G.Username = cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
+	username := cfg.Alternate(*usernameArg, "USERNAME", osUser.Username)
+	common.G.Username = strings.ToLower(username)
 
 	keyFilename := strings.Join([]string{common.G.Username, "rsa"}, "-")
 	defKeyFile := path.Join(osUser.HomeDir, APP_SETTINGS_HOME_DIR, keyFilename)
