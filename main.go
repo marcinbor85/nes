@@ -20,6 +20,7 @@ import (
 	"github.com/marcinbor85/nes/cmd/config"
 	"github.com/marcinbor85/nes/cmd/generate"
 	"github.com/marcinbor85/nes/cmd/chat"
+	"github.com/marcinbor85/nes/cmd/version"
 )
 
 const (
@@ -76,6 +77,7 @@ func main() {
 		config.Cmd,
 		generate.Cmd,
 		chat.Cmd,
+		version.Cmd,
 	}
 
 	for _, c := range commands {
