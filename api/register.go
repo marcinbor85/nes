@@ -17,7 +17,7 @@ type RegisterUsernameRequest struct {
 }
 
 func (client *Client) RegisterNewUsername(username string, email string, publicKey string) error {
-	url := strings.Join([]string{client.Address, "user"}, "/")
+	url := strings.Join([]string{client.Address, "users"}, "/")
 	req := &RegisterUsernameRequest{
 		Username:  username,
 		PublicKey: publicKey,

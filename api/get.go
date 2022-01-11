@@ -13,7 +13,6 @@ import (
 )
 
 type GetPublicKeyResponse struct {
-	Username  string `json:"username"`
 	PublicKey string `json:"public_key"`
 }
 
@@ -24,7 +23,7 @@ func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, e
 		return cachedKey, nil
 	}
 
-	url := strings.Join([]string{client.Address, "user", username}, "/")
+	url := strings.Join([]string{client.Address, "users", username}, "/")
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -45,10 +44,6 @@ func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, e
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
 		return nil, err
-	}
-
-	if username != data.Username {
-		return nil, errors.New("username mismatch")
 	}
 
 	key, err := r.DecodePublicKey(data.PublicKey)
