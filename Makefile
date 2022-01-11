@@ -1,4 +1,4 @@
-VERSION = $(shell git describe --always --dirty)
+VERSION = $(shell git describe --abbrev=0 --tags)
 
 BINARY_NAME = nes
 
