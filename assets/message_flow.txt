@@ -1,0 +1,54 @@
+participantgroup #lightgreen **Client**
+fontawesome5solid f007 Alice
+end
+participantgroup #lightblue **Cloud**
+fontawesome5solid f1c0 Public Keys Provider
+fontawesome5solid f233 MQTT Broker
+end
+participantgroup #lightgreen **Client**
+fontawesome5solid f007 Bob
+end
+participantgroup #pink **Client**
+fontawesome5solid f007 Carol
+end
+
+parallel
+space 1
+Bob->MQTT Broker: Subscribe **"nes/bob/message"** topic
+note over Alice: <align:center>Want to send message to Bob:\n**Hello Bob!**</align>
+note over Carol: <align:center>She is jelous of Bob,\nso she tries to intercept Bob's messages</align>
+parallel off
+Carol->MQTT Broker: Subscribe **"nes/bob/message"** topic
+
+alt Bob's public key in cache
+note over Alice: Get Bob's public key from cache
+else No Bob's public key in cache
+Alice->Public Keys Provider: Request for Bob's public key
+Public Keys Provider->Alice: Bob's public key
+end
+                    
+note over Alice: Generate random symmetric AES-256 key
+note over Alice: Encrypt message with generated AES-256 key
+note over Alice: Encrypt key with with Bob's public key
+note over Alice: Sign message with Alice's private key
+Alice->MQTT Broker: Publish encrypted message to **"nes/bob/message"** topic
+MQTT Broker->Bob: New encrypted message from someone
+MQTT Broker->Carol: New encrypted message from someone
+
+note over Carol: <align:center>Oh soo, somebody write to Bob.\nShe have no idea how to decrypt this message,\n so she don't even know who writes to Bob.\nShe can't do it because she have no access\nto Bob's private key.
+note over Bob: Decrypt AES-256 key with Bob's private key
+
+note over Bob: Decrypt message with AES-256 key
+note over Bob: Check who is sender - its Alice
+
+alt Alice's public key in cache
+note over Bob: Get Alices's public key from cache
+else No Alices's public key in cache
+Bob->Public Keys Provider: Request for Alice's public key
+Public Keys Provider->Bob: Alice's public key
+end
+
+note over Bob: Verify message signature with Alice's public key
+
+note over Bob: Verified message from Alice:\n<align:center>**Hello Bob!**</align>
+
