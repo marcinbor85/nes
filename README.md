@@ -130,7 +130,7 @@ nes generate -s 4096 -u <username>
 
 - generate RSA keys pair for current user, and save it to provided files
 ```bash
-nes generate -k mykey-rsa -K mykey-rsa.pub
+nes generate -k <private_key_filename> -K <public_key_filename>
 ```
 
 ### Register username
@@ -141,7 +141,7 @@ nes register -e <email>
 
 - register provided username with specified public key
 ```bash
-nes register -u <username> -e <email> -K <public_key>
+nes register -u <username> -e <email> -K <public_key_filename>
 ```
 
 ### Message listening
