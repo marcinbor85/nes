@@ -165,7 +165,7 @@ nes send -t <recipient_username> -m <message>
 nes send -t <recipient_username> -u <local_username> -m <message>
 ```
 
-### Interactive char
+### Interactive chat
 - open interactive chat with user
 ```bash
 nes chat -t <recipient_username>
