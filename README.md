@@ -14,13 +14,12 @@ NES Messanger uses two cloud-base services.
 
 First one is public keys provider which as the name suggests, is intented to share public keys of registered users.
 As You probably know, public keys are used to encrypt messages in asymmetric encryption algorithms like RSA-2048,
-and for signature verification. So it is the most safe solution for this moment.
-As long as private keys remains on the client's device it is the most secure solution.
+and for signature verification. So this is the most secure solution, as long as private key remains on the client's device.
 
 The second one is a MQTT broker. Due to the high level of security and strong encryption,
 it is safe to use even a public broker. Of course, anyone will be able to intercept encrypted messages
 (which is generally obvious, even in the most secure environment), but only the original recipient of the message
-will be able to decode it. Darkest is under the lantern. You could use Your own private broker, or use already existing public one.
+will be able to decrypt it. Darkest is under the lantern. You could use Your own private broker, or use already existing public one.
 
 ![alt text](assets/cloud.png?raw=true "Cloud architecture")
 
