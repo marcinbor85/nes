@@ -78,7 +78,7 @@ The PubKey Service is also an open source project, that you can freely deploy to
 It doesn't store any private data, except email which is used to register confirmation only.
 
 Source code and more information about PubKey Service are available here: https://github.com/marcinbor85/pubkey.
-\At this moment it is running on https://microshell.pl/pubkey domain as a default provider for NES.
+At this moment it is running on https://microshell.pl/pubkey domain as a default provider for NES.
 
 NES Messenger is a CLI tool, running on Linux and Windows natively thanks to GO. Functionalities are divided into commands,
 and the help for each command is available independently with the ```-h``` flag.
