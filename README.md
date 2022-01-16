@@ -10,7 +10,6 @@ Therefore the messenger uses public MQTT brokers and asymmetric cryptography wit
 Let what is public remain public, and what is private remain private, without exceptions.
 
 ## How it works?
----
 NES Messanger uses two cloud-base services.
 
 First one is public keys provider which as the name suggests, is intented to share public keys of registered users.
@@ -38,16 +37,12 @@ is who they say they are. The signing and verification algorithm is triggered au
 This makes the NES communicator resistant to Man In The Middle attacks as well.
 
 ## Flow
----
-
 What does the message exchange between NES messenger clients look like?\
 This is shown in the diagram below.
 
 ![alt text](assets/message_flow.png?raw=true "Cloud architecture")
 
 ## Messages
----
-
 All messages are subscribed and published to MQTT broker on topic:
 ```bash
 nes/<username>/message
@@ -77,14 +72,16 @@ Encrypted message has followed format:
 ```
 
 ## Usage
----
-To use NES Messanger You need to register Your public key to some public keys provider service.
+To use NES Messenger You need to register Your public key to some public keys provider service.
 At this moment NES support only PubKey Service, which was created specifically for the needs of NES Messenger.
 The PubKey Service is also an open source project, that you can freely deploy to any server.
 It doesn't store any private data, except email which is used to register confirmation only.
 
 Source code and more information about PubKey Service are available here: https://github.com/marcinbor85/pubkey.\
 At this moment it is running on https://microshell.pl/pubkey domain as a default provider for NES.
+
+NES Messenger is a CLI tool, running on Linux and Windows natively thanks to GO. Functionalities are divided into commands,
+and the help for each command is available independently with the ```-h``` flag.
 
 ```bash
 usage: nes <Command> [-h|--help] [-b|--broker "<value>"] [-p|--provider
@@ -119,11 +116,8 @@ Arguments:
 ```
 
 ## Examples
----
 
 ### Generate keys
----
-
 - generate RSA keys pair for current user, and save it to ~/.nes/ directory
 ```bash
 nes generate
@@ -140,8 +134,6 @@ nes generate -k mykey-rsa -K mykey-rsa.pub
 ```
 
 ### Register username
----
-
 - register current user at public keys provider service
 ```bash
 nes register -e <email>
@@ -153,8 +145,6 @@ nes register -u <username> -e <email> -K <public_key>
 ```
 
 ### Message listening
----
-
 - start listening for all messages
 ```bash
 nes listen
@@ -166,8 +156,6 @@ nes listen -u <username>
 ```
 
 ### Sending messages
----
-
 - send message to other user
 ```bash
 nes send -t <recipient_username> -m <message>
@@ -179,12 +167,12 @@ nes send -t <recipient_username> -u <local_username> -m <message>
 ```
 
 ### Interactive char
----
-
 - open interactive chat with user
 ```bash
 nes chat -t <recipient_username>
 ```
+
+![alt text](assets/chat.png?raw=true "Interactive chat")
 
 - open interactive chat with user using specified configuration file
 ```bash
@@ -192,8 +180,6 @@ nes chat -t <recipient_username> -c <config_file>
 ```
 
 ### Configuration
----
-
 - save non-volatile settings
 ```bash
 nes config -u <local_username> -S
@@ -205,8 +191,6 @@ nes config -s
 ```
 
 ## Contribution
----
-
 There are a lot of ideas to implement and expand this project.
 If you feel that You could participating, don't hesitate for a moment.
 It's great fun and you can learn a lot.
