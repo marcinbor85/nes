@@ -23,13 +23,13 @@ will be able to decrypt it. Darkest is under the lantern. You could use Your own
 
 ![alt text](assets/cloud.png?raw=true "Cloud architecture")
 
-The AES-256 algorithm with symmetric keys is used to encrypt messages. Aymmetric keys are randomly generated
-for each message and encrypted with the RSA algorithm with public recipient key. Therefore, without the private key,
+The AES-256 algorithm with symmetric keys is used to encrypt messages. Symmetric keys are randomly generated
+for each message and encrypted with the RSA algorithm with recipient public key. Therefore, without the private key,
 it is not possible to restore the encrypted messages string, even if the AES key is broken by brute force.
 Such an operation would have to be repeated for each subsequent message, which is an extremely complex
 and time-consuming operation. For example, even if the interceptor manages to decrypt the first message
 that you are dating someone for a beer, in order to find out what time it will be,
-he will have to decrypt the keys of the second message again.
+he will have to decrypt the second message encrypted with diffenet keys again.
 
 In addition, each message is signed by sender private key, so the recipient can verify that the sender
 is who they say they are. The signing and verification algorithm is triggered automatically for each message.
