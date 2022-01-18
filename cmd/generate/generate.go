@@ -35,12 +35,27 @@ func Logic(c *cmd.Command) {
 		fmt.Println("Generate keys error:", err.Error())
 		return
 	}
-	err = r.SavePrivateKey(priv, common.G.PrivateKeyFile)
+	err = r.SavePrivateKey(priv, common.G.PrivateKeyMessageFile)
 	if err != nil {
 		fmt.Println("Cannot save private key:", err.Error())
 		return
 	}
-	err = r.SavePublicKey(pub, common.G.PublicKeyFile)
+	err = r.SavePublicKey(pub, common.G.PublicKeyMessageFile)
+	if err != nil {
+		fmt.Println("Cannot save public key:", err.Error())
+		return
+	}
+	priv, pub, err = r.GenerateKeysPair(*ctx.Size)
+	if err != nil {
+		fmt.Println("Generate keys error:", err.Error())
+		return
+	}
+	err = r.SavePrivateKey(priv, common.G.PrivateKeySignFile)
+	if err != nil {
+		fmt.Println("Cannot save private key:", err.Error())
+		return
+	}
+	err = r.SavePublicKey(pub, common.G.PublicKeySignFile)
 	if err != nil {
 		fmt.Println("Cannot save public key:", err.Error())
 		return

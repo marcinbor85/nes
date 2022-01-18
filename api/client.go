@@ -4,16 +4,23 @@ import (
 	"crypto/rsa"
 )
 
-type PublicKeyMap map[string]*rsa.PublicKey
-
-type Client struct {
-	Address string
-	PublicKeyCache *PublicKeyMap
+type KeyCache struct {
+	PublicKeyMessage *rsa.PublicKey
+	PublicKeySign	 *rsa.PublicKey
 }
 
-func NewClient(address string) *Client {
+type PublicKeyMap map[string]*KeyCache
+
+type Client struct {
+	Address 		string
+	ServerPublicKey	*rsa.PublicKey
+	PublicKeyCache 	*PublicKeyMap
+}
+
+func NewClient(address string, serverPublicKey *rsa.PublicKey) *Client {
 	client := &Client{
 		Address: address,
+		ServerPublicKey: serverPublicKey,
 		PublicKeyCache: &PublicKeyMap{},
 	}
 	return client

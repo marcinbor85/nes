@@ -11,16 +11,18 @@ import (
 )
 
 type RegisterUsernameRequest struct {
-	Username  string `json:"username"`
-	PublicKey string `json:"public_key"`
-	Email     string `json:"email"`
+	Username			string `json:"username"`
+	PublicKeyMessage	string `json:"public_key_message"`
+	PublicKeySign		string `json:"public_key_sign"`
+	Email				string `json:"email"`
 }
 
-func (client *Client) RegisterNewUsername(username string, email string, publicKey string) error {
+func (client *Client) RegisterNewUsername(username string, email string, publicKeyMessage string, publicKeySign string) error {
 	url := strings.Join([]string{client.Address, "users"}, "/")
 	req := &RegisterUsernameRequest{
 		Username:  username,
-		PublicKey: publicKey,
+		PublicKeyMessage: publicKeyMessage,
+		PublicKeySign: publicKeySign,
 		Email:     email,
 	}
 	reqJson, err := json.Marshal(req)

@@ -39,15 +39,15 @@ func Logic(c *cmd.Command) {
 
 	recipient := *ctx.To
 
-	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress, common.G.PubKeyPublicKey)
 
-	publicKey, err := pubkeyClient.GetPublicKeyByUsername(recipient)
+	publicKeyMessage, _, err := pubkeyClient.GetPublicKeyByUsername(recipient)
 	if err != nil {
 		fmt.Println("Cannot get recipient public key:", err.Error())
 		return
 	}
 
-	privateKey, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
+	privateKeySign, _, err := rsa.LoadPrivateKey(common.G.PrivateKeySignFile)
 	if err != nil {
 		fmt.Println("Cannot load private key:", err.Error())
 		return
@@ -60,7 +60,7 @@ func Logic(c *cmd.Command) {
 		Message: *ctx.Message,
 	}
 
-	frame, err := msg.Encrypt(publicKey, privateKey)
+	frame, err := msg.Encrypt(publicKeyMessage, privateKeySign)
 	if err != nil {
 		fmt.Println("Cannot encrypt message:", err.Error())
 		return

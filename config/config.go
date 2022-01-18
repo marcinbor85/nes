@@ -18,7 +18,7 @@ func Alternate(priorityVal string, key string, defaultVal string) string {
 }
 
 func Init(fileName string) {
-	godotenv.Load(fileName)
+	_ = godotenv.Load(fileName)
 }
 
 func Get(key string) string {

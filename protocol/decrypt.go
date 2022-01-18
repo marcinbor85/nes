@@ -11,7 +11,7 @@ import (
 	r "github.com/marcinbor85/nes/crypto/rsa"
 )
 
-func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Message, error) {
+func (frame *Frame) Decrypt(privateKeyMessage *rsa.PrivateKey, client *api.Client) (*Message, error) {
 	
 	// get randomKeyEncryptedEncoded from frame
 	randomKeyEncryptedEncoded := frame.Cipherkey
@@ -23,7 +23,7 @@ func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Me
 	}
 
 	// decrypt randomKeyEncrypted using privateKey
-	randomKey, err := r.Decrypt(randomKeyEncrypted, privateKey)
+	randomKey, err := r.Decrypt(randomKeyEncrypted, privateKeyMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Me
 		return nil, err
 	}
 
-	publicKey, ee := client.GetPublicKeyByUsername(message.From)
+	_, publicKeySign, ee := client.GetPublicKeyByUsername(message.From)
 	if ee != nil {
 		return nil, ee
 	}
@@ -59,7 +59,7 @@ func (frame *Frame) Decrypt(privateKey *rsa.PrivateKey, client *api.Client) (*Me
 	messageSignature, err := base64.URLEncoding.DecodeString(messageSignatureEncoded)
 
 	// verify signature using privateKey
-	err = r.Verify(messageBin, messageSignature, publicKey)
+	err = r.Verify(messageBin, messageSignature, publicKeySign)
 	if err != nil {
 		return nil, err
 	}

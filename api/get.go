@@ -8,50 +8,86 @@ import (
 
 	"crypto/rsa"
 	"encoding/json"
+	"encoding/base64"
 
 	r "github.com/marcinbor85/nes/crypto/rsa"
 )
 
 type GetPublicKeyResponse struct {
-	PublicKey string `json:"public_key"`
+	PublicKeyMessage string `json:"public_key_message"`
+	PublicKeySign 	 string `json:"public_key_sign"`
 }
 
-func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, error) {
+type GetPublicKeyData struct {
+	Response 	json.RawMessage `json:"response"`
+	Signature	string `json:"signature"`
+}
 
-	cachedKey := (*client.PublicKeyCache)[username]
-	if cachedKey != nil {
-		return cachedKey, nil
+func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, *rsa.PublicKey, error) {
+
+	cachedKeys := (*client.PublicKeyCache)[username]
+	if cachedKeys != nil {
+		return cachedKeys.PublicKeyMessage, cachedKeys.PublicKeySign, nil
 	}
 
 	url := strings.Join([]string{client.Address, "users", username}, "/")
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		_, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		return nil, errors.New("user not found")
+		return nil, nil, errors.New("user not found")
 	}
 
-	var data GetPublicKeyResponse
-
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	key, err := r.DecodePublicKey(data.PublicKey)
+	data := &GetPublicKeyData{}
+	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	(*client.PublicKeyCache)[username] = key
+	response := &GetPublicKeyResponse{}
+	err = json.Unmarshal([]byte(data.Response), &response)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	return key, nil
+	keyMessage, err := r.DecodePublicKey(response.PublicKeyMessage)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	keySign, err := r.DecodePublicKey(response.PublicKeySign)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	responseBin := []byte(data.Response)
+	signatureBin, err := base64.URLEncoding.DecodeString(data.Signature)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = r.Verify(responseBin, signatureBin, client.ServerPublicKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*client.PublicKeyCache)[username] = &KeyCache{
+		PublicKeyMessage: keyMessage,
+		PublicKeySign: keySign,
+	}
+
+	return keyMessage, keySign, nil
 }

@@ -28,9 +28,9 @@ func Init(c *cmd.Command) {
 }
 
 func Logic(c *cmd.Command) {
-	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress, common.G.PubKeyPublicKey)
 
-	privateKey, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyFile)
+	privateKeyMessage, _, err := rsa.LoadPrivateKey(common.G.PrivateKeyMessageFile)
 	if err != nil {
 		fmt.Println("Cannot load private key:", err.Error())
 		return
@@ -40,8 +40,9 @@ func Logic(c *cmd.Command) {
 		BrokerAddress: common.G.MqttBrokerAddress,
 		Recipient: common.G.Username,
 		OnFrame: func(client *broker.Client, frame *protocol.Frame) {
-			msg, e := frame.Decrypt(privateKey, pubkeyClient)
+			msg, e := frame.Decrypt(privateKeyMessage, pubkeyClient)
 			if e != nil {
+				fmt.Printf("%v\n",e)
 				return
 			}
 			t := time.UnixMilli(msg.Timestamp)

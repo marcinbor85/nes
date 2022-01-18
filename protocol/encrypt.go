@@ -9,7 +9,7 @@ import (
 	r "github.com/marcinbor85/nes/crypto/rsa"
 )
 
-func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) (*Frame, error) {
+func (message *Message) Encrypt(publicKeyMessage *rsa.PublicKey, privateKeySign *rsa.PrivateKey) (*Frame, error) {
 	// stringinize message struct
 	messageString := message.String()
 
@@ -27,7 +27,7 @@ func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.Privat
 	messageEncryptedEncoded := base64.URLEncoding.EncodeToString(messageEncrypted)
 
 	// encrypt randomKey using publicKey
-	randomKeyEncrypted, err := r.Encrypt(randomKey, publicKey)
+	randomKeyEncrypted, err := r.Encrypt(randomKey, publicKeyMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (message *Message) Encrypt(publicKey *rsa.PublicKey, privateKey *rsa.Privat
 	randomKeyEncryptedEncoded := base64.URLEncoding.EncodeToString(randomKeyEncrypted)
 
 	// sign messageBin hash using privateKey
-	messageSignature, err := r.Sign(messageBin, privateKey)
+	messageSignature, err := r.Sign(messageBin, privateKeySign)
 	if err != nil {
 		return nil, err
 	}

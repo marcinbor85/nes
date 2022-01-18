@@ -17,24 +17,31 @@ import (
 )
 
 type ChatManager struct {
-	chatView	    *ChatView
-	inputView		*InputView
-	privateKey		*rsa.PrivateKey
-	publicKey		*rsa.PublicKey
-	pubkeyClient	*api.Client
-	brokerClient	*broker.Client
-	recipient		string
+	chatView	    				*ChatView
+	inputView						*InputView
+	privateKeyMessage				*rsa.PrivateKey
+	privateKeySign					*rsa.PrivateKey
+	recipientPublicKeyMessage		*rsa.PublicKey
+	recipientPublicKeySign			*rsa.PublicKey
+	pubkeyClient					*api.Client
+	brokerClient					*broker.Client
+	recipient						string
 }
 
 func NewChatManager(chatView *ChatView, inputView *InputView, recipient string) (*ChatManager, error) {
-	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress, common.G.PubKeyPublicKey)
 	
-	privateKey, _, err := r.LoadPrivateKey(common.G.PrivateKeyFile)
+	privateKeyMessage, _, err := r.LoadPrivateKey(common.G.PrivateKeyMessageFile)
+	if err != nil {
+		return nil, errors.New("Cannot load private key: " + err.Error())
+	}
+
+	privateKeySign, _, err := r.LoadPrivateKey(common.G.PrivateKeySignFile)
 	if err != nil {
 		return nil, errors.New("Cannot load private key: " + err.Error())
 	}
 	
-	publicKey, err := pubkeyClient.GetPublicKeyByUsername(recipient)
+	recipientPublicKeyMessage, recipientPublicKeySign, err := pubkeyClient.GetPublicKeyByUsername(recipient)
 	if err != nil {
 		return nil, errors.New("Cannot get recipient public key: " + err.Error())
 	}
@@ -42,15 +49,17 @@ func NewChatManager(chatView *ChatView, inputView *InputView, recipient string) 
 	self := &ChatManager{
 		chatView: chatView,
 		inputView: inputView,
-		privateKey: privateKey,
-		publicKey: publicKey,
+		privateKeyMessage: privateKeyMessage,
+		privateKeySign: privateKeySign,
+		recipientPublicKeyMessage: recipientPublicKeyMessage,
+		recipientPublicKeySign: recipientPublicKeySign,
 		pubkeyClient: pubkeyClient,
 		recipient: recipient,
 		brokerClient: &broker.Client{
 			BrokerAddress: common.G.MqttBrokerAddress,
 			Recipient: common.G.Username,
 			OnFrame: func(client *broker.Client, frame *protocol.Frame) {
-				msg, e := frame.Decrypt(privateKey, pubkeyClient)
+				msg, e := frame.Decrypt(privateKeyMessage, pubkeyClient)
 				if e != nil {
 					return
 				}
@@ -82,7 +91,7 @@ func (chatManager *ChatManager) SendMessage(text string) error {
 		Message: text,
 	}
 
-	frame, err := msg.Encrypt(chatManager.publicKey, chatManager.privateKey)
+	frame, err := msg.Encrypt(chatManager.recipientPublicKeyMessage, chatManager.privateKeySign)
 	if err != nil {
 		return errors.New("Cannot encrypt message: " + err.Error())
 	}

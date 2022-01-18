@@ -27,7 +27,7 @@ func (message *Message) String() string {
 
 func MessageFromString(text string) (*Message, error) {
 	message := &Message{}
-	err := json.Unmarshal([]byte(text), &message)
+	err := json.Unmarshal([]byte(text), message)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (frame *Frame) String() string {
 
 func FrameFromString(text string) (*Frame, error) {
 	frame := &Frame{}
-	err := json.Unmarshal([]byte(text), &frame)
+	err := json.Unmarshal([]byte(text), frame)
 	if err != nil {
 		return nil, err
 	}

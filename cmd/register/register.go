@@ -36,15 +36,21 @@ func Init(c *cmd.Command) {
 func Logic(c *cmd.Command) {
 	ctx := c.Context.(*RegisterContext)
 
-	_, publicKeyPem, err := rsa.LoadPublicKey(common.G.PublicKeyFile)
+	_, publicKeyMessagePem, err := rsa.LoadPublicKey(common.G.PublicKeyMessageFile)
 	if err != nil {
 		fmt.Println("Cannot load public key:", err.Error())
 		return
 	}
 
-	pubkeyClient := api.NewClient(common.G.PubKeyAddress)
+	_, publicKeySignPem, err := rsa.LoadPublicKey(common.G.PublicKeySignFile)
+	if err != nil {
+		fmt.Println("Cannot load public key:", err.Error())
+		return
+	}
 
-	err = pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyPem)
+	pubkeyClient := api.NewClient(common.G.PubKeyAddress, common.G.PubKeyPublicKey)
+
+	err = pubkeyClient.RegisterNewUsername(common.G.Username, *ctx.Email, publicKeyMessagePem, publicKeySignPem)
 	if err != nil {
 		fmt.Println("Cannot register username:", err.Error())
 		return

@@ -13,6 +13,17 @@ fontawesome5solid f007 Carol
 end
 
 parallel
+note right of Alice: Private Key for messages decryption
+note left of Bob: Private Key for messages decryption
+note left of Carol: Private Key for messages decryption
+parallel off
+parallel
+note right of Alice: Private Key for messages signing
+note left of Bob: Private Key for messages signing
+note left of Carol: Private Key for messages signing
+parallel off
+
+parallel
 space 1
 Bob->MQTT Broker: Subscribe **"nes/bob/message"** topic
 note over Alice: <align:center>Want to send message to Bob:\n**Hello Bob!**</align>
@@ -20,11 +31,13 @@ note over Carol: <align:center>She is jelous of Bob,\nso she tries to intercept 
 parallel off
 Carol->MQTT Broker: Subscribe **"nes/bob/message"** topic
 
-alt Bob's public key in cache
-note over Alice: Get Bob's public key from cache
-else No Bob's public key in cache
-Alice->Public Keys Provider: Request for Bob's public key
-Public Keys Provider->Alice: Bob's public key
+alt Bob's public keys in cache
+note over Alice: Get Bob's public keys from cache
+else No Bob's public keys in cache
+Alice->Public Keys Provider: Request for Bob's public keys
+note over Public Keys Provider: <align:center>Sign response with\nserver private key</align>
+Public Keys Provider->Alice: Bob's public keys
+note over Alice: <align:center>Verify server response with\nserver public key</align>
 end
                     
 note over Alice: Generate random symmetric AES-256 key
@@ -41,11 +54,13 @@ note over Bob: Decrypt AES-256 key with Bob's private key
 note over Bob: Decrypt message with AES-256 key
 note over Bob: Check who is sender - its Alice
 
-alt Alice's public key in cache
-note over Bob: Get Alices's public key from cache
-else No Alices's public key in cache
-Bob->Public Keys Provider: Request for Alice's public key
-Public Keys Provider->Bob: Alice's public key
+alt Alice's public keys in cache
+note over Bob: Get Alices's public keys from cache
+else No Alices's public keys in cache
+Bob->Public Keys Provider: Request for Alice's public keys
+note over Public Keys Provider: <align:center>Sign response with\nserver private key</align>
+Public Keys Provider->Bob: Alice's public keys
+note over Bob: <align:center>Verify server response with\nserver public key</align>
 end
 
 note over Bob: Verify message signature with Alice's public key

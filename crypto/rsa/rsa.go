@@ -157,7 +157,10 @@ func Sign(message []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	hash32 := sha256.Sum256(message)
 	hash := hash32[:]
 
-	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hash)
+	var opts rsa.PSSOptions
+	opts.SaltLength = rsa.PSSSaltLengthAuto
+
+	signature, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA256, hash, &opts)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +172,9 @@ func Verify(message []byte, signature []byte, publicKey *rsa.PublicKey) error {
 	hash32 := sha256.Sum256(message)
 	hash := hash32[:]
 
-	err := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, hash, signature)
+	var opts rsa.PSSOptions
+	opts.SaltLength = rsa.PSSSaltLengthAuto
+
+	err := rsa.VerifyPSS(publicKey, crypto.SHA256, hash, signature, &opts)
 	return err
 }
