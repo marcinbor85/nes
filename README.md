@@ -58,8 +58,13 @@ All messages are subscribed and published to MQTT broker on topic:
 nes/<username>/message
 ```
 
-So each client subscribe its own topic on the MQTT broker with its own username.\
-And each client send messages to remote username using the similar topic.
+You can subscribe this topic manually to view all NES traffic:
+```bash
+mosquitto_sub -h test.mosquitto.org -p 1883 -t nes/+/message
+```
+
+In NES each client subscribe its own topic on the MQTT broker with its own username.\
+And each client send messages to remote username using this topic.
 
 Message published to MQTT broker has such format:
 
@@ -71,7 +76,7 @@ Message published to MQTT broker has such format:
 }
 ```
 
-Encrypted message has followed format:
+Message before encryption has followed format:
 ```json
 {
     "from": "<recipient username>",
